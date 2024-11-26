@@ -68,9 +68,8 @@ def api(favhash=None,use_api_key=False, api_key=None):
 
 def sub_osint(key, domain, ip=None):
     try:
-        SHODAN_API_KEY = key
         subdomain = domain
-        api = shodan.Shodan(SHODAN_API_KEY)
+        api = shodan.Shodan(key)
         fields = ["timestamp", "ip_str", "port", "hostnames", "location", "org", "isp", "os", "domains", "asn", "title", "product", "version", "cpe", "cve", "tags", "hash", "transport", "ssl", "uptime", "link", "type", "info", "host", "device_type", "device", "telnet", "ssh", "ftp", "smtp", "service", "service_type", "banner"]
         #fields = ["ip_str", "port", "hostnames", "org", "isp", "asn", "os", "location", "domains", "product", "version", "cpe"]
         if ip!=None:
@@ -86,10 +85,13 @@ def sub_osint(key, domain, ip=None):
 
 if __name__ == "__main__":
     load_dotenv()
-    api_key = os.getenv("SHODAN_API_KEY")
+    SHODAN_API_KEY = os.getenv("SHODAN_API_KEY")
+
     fhash = get_favicon_url("python.org")
     print(json.dumps(fhash,indent=4))
-    fresult = api(fhash,True, api_key)
-    sub_result = sub_osint(api_key, 'python.org')
+    
+    fresult = api(fhash,True, SHODAN_API_KEY)
+    sub_result = sub_osint(SHODAN_API_KEY, 'python.org')
+    
     print(json.dumps(fresult,indent=4))
     print(json.dumps(sub_result,indent=4))
