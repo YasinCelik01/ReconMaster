@@ -22,9 +22,7 @@ def fetch_ip_from_url(url,dns_server="8.8.8.8"):
 
 	dns_info = get_dns_info(url,dns_server)
     
-	return {
-		"dns_info": dns_info,
-	}
+	return dns_info
 
 if __name__ == "__main__":
 	url = "python.org"
