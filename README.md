@@ -10,3 +10,4 @@ Sızma testlerinde veya zafiyet avcılığında yardımcı olması hedeflenmişt
 * Whois
 * Wayback Machine
 * [Katana](https://github.com/projectdiscovery/katana)
+* [Smap](https://github.com/s0md3v/Smap)
