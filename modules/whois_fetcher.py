@@ -18,7 +18,6 @@ def extract_domain(url):
 		return None
 
 def get_whois_info(domain):
-    
 	try:
 		w = whois.whois(domain)
 		return w
@@ -27,18 +26,13 @@ def get_whois_info(domain):
 		return None
         
 #main dosyasından çağrılacak fonksiyon
-
 def fetch_whois_from_url(url):
-
 	domain = extract_domain(url)
 	whois_info = get_whois_info(domain)
-
 	return(json.dumps(whois_info, default=str, indent=4))
 
-	
-
 if __name__ == "__main__":
-
+	print(whois.__file__)
 	url = "python.org"
 	domain = extract_domain(url)
 	print(f"Extracted domain: {domain}")

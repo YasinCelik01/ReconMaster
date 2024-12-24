@@ -1,2 +1,5 @@
 .venv/
 .env
+gh_subdomains.txt
+__pycache__/
+recon_db.db

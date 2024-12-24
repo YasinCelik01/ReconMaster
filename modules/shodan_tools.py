@@ -4,9 +4,9 @@ import codecs
 import shodan
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
-import json
 from dotenv import load_dotenv
 import os
+import json
 
 def get_favicon_hash(url):
     try:
@@ -83,15 +83,15 @@ def sub_osint(key, domain, ip=None):
         return None
 
 
+
 if __name__ == "__main__":
     load_dotenv()
     SHODAN_API_KEY = os.getenv("SHODAN_API_KEY")
 
     fhash = get_favicon_url("python.org")
     print(json.dumps(fhash,indent=4))
-    
     fresult = api(fhash,True, SHODAN_API_KEY)
     sub_result = sub_osint(SHODAN_API_KEY, 'python.org')
-    
     print(json.dumps(fresult,indent=4))
     print(json.dumps(sub_result,indent=4))
+

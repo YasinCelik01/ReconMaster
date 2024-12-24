@@ -1,6 +1,5 @@
 import subprocess
 import json
-import re
 
 # DNS sorgusu yapan fonksiyon
 def get_dns_info(domain,dns_server):
@@ -21,7 +20,6 @@ def get_dns_info(domain,dns_server):
 def fetch_ip_from_url(url,dns_server="8.8.8.8"):
 
 	dns_info = get_dns_info(url,dns_server)
-    
 	return dns_info
 
 if __name__ == "__main__":

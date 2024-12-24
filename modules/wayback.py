@@ -1,13 +1,14 @@
-"""
-https://medium.com/@gguzelkokar.mdbf15/from-wayback-machine-to-aws-metadata-uncovering-ssrf-in-a-production-system-within-5-minutes-2d592875c9ab
 
-Wayback machine'den subdomainler, directory'ler getirir, liste olarak döndürür.
-"""
+# https://medium.com/@gguzelkokar.mdbf15/from-wayback-machine-to-aws-metadata-uncovering-ssrf-in-a-production-system-within-5-minutes-2d592875c9ab
+# Wayback machine'den subdomainler, directory'ler getirir, liste olarak döndürür.
+# Büyük hedefler için yavaş, tee gibi bir komut gerek
+
 
 import requests
 
 # Main'den çağırılacak Fonskiyon
-def run(target: str):
+# Wayback machine'de 200 response'u ile arşivlenmiş adresleri getirir
+def fetch_wayback_200(target: str):
     url = f"""
     https://web.archive.org/cdx/search/cdx?url=*.{target}%2F*&output=text&fl=original&collapse=urlkey&filter=statuscode%3A200
     """
@@ -19,6 +20,6 @@ def run(target: str):
 
 if __name__ == "__main__":
     TARGET = "balpars.com"
-    result = run(TARGET)
+    result = fetch_wayback_200(TARGET)
     print(result)
 	

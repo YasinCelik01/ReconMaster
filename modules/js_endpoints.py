@@ -3,7 +3,7 @@ import subprocess
 import os
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-import json  
+# import json  
 
 #Mainden cagrılacak fonksiyon
 def linkfinder(url):
@@ -38,10 +38,17 @@ def linkfinder(url):
 		result_dict[js_url] = endpoints
 		os.remove('temp.js')
 
-	json_result = json.dumps(result_dict, indent=4)
-	return json_result
-
+	# DEMO için
+	# json_result = json.dumps(result_dict, indent=4)
+	# return json_result
+	# 
+	endpoints = []
+	endpoints.extend(result_dict.keys())  # Add JS file URLs
+	endpoints.extend([item for sublist in result_dict.values() for item in sublist])  # Flattened values
+	return endpoints
+ 
+ 
 if __name__ == "__main__":
-	url = 'python.org'
+	url = 'balpars.com'
 	x = linkfinder(url)
-	print(x)  
+	print(x)

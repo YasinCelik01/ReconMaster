@@ -1,7 +1,4 @@
 import subprocess
-import re
-
-import subprocess
 
 def smap_scan(target: str):
     SMAP_COMMAND = [
