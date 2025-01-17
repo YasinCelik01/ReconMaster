@@ -99,7 +99,7 @@ def active_recon(target: str):
     endpoints.extend(katana_endpoints)
     
     ## JS Endpoints
-    # print("[INFO] Extracting JS endpoints with LinkFinder...")
+    print("[INFO] Extracting JS endpoints with LinkFinder...")
     linfinder_results = js_endpoints.linkfinder(target)
     endpoints.extend(linfinder_results)
     
