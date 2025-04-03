@@ -48,6 +48,5 @@ def main():
 	print(scan_with_nmap("balpars.com"))
 
 
-
 if __name__ == "__main__":
     main()

@@ -11,7 +11,7 @@ from modules.url_endpoint_filter import separate_subdomains_and_endpoints
 from modules import smap
 from modules import katana
 from modules import js_endpoints
-#from modules import nmap_scan
+from modules import nmap_scan
 
 def passive_recon(target: str):
     print(f"[INFO] Starting passive reconnaissance for target: {target}")
@@ -86,7 +86,7 @@ def active_recon(target: str):
     
     subdomains = []
     endpoints = []
-    #open_ports = []
+    open_ports = []
 
     # Crawling
     print("[INFO] Starting crawling...")
@@ -104,9 +104,8 @@ def active_recon(target: str):
     endpoints.extend(linfinder_results)
     
     # TO BE DONE: NMAP Scan
-    print("[TO BE DONE] Commented out for demo.")
-    # open_ports = nmap_scan.scan_with_nmap(target)
-    #
+    print("[INFO] Scanning Ports with NMAP...")
+    open_ports = nmap_scan.scan_with_nmap(target)
 
     # Yazılım ve WAF tespiti
     print("[TO BE DONE] Add software and WAF detection logic here.")
@@ -122,7 +121,7 @@ def active_recon(target: str):
     
     result["endpoints"] = list(set(endpoints))
     result["subdomains"] = list(set(subdomains))
-    result["open_ports"] = ['Commented out for demo']
+    result["open_ports"] = open_ports
 
     
     return result

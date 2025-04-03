@@ -23,7 +23,8 @@ def katana_scan(target: str, rate_limit:int = 10):
     
     stdout, stderr = process.communicate()
     output_list = stdout.splitlines()
-    return output_list
+    filtered_list = [s for s in output_list if "[launcher.Browser]" not in s]
+    return filtered_list
 
 if __name__ == "__main__":
     result = katana_scan('balpars.com')

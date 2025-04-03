@@ -4,6 +4,10 @@ import os
 
 def run_shosubgo(target: str, key):
     
+    if not key:
+        print("[INFO] No Shodan Key, skipping shosubgo")
+        return []
+
     COMMAND = [
         'shosubgo',
         '-d', target,
