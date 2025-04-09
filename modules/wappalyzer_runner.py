@@ -4,7 +4,7 @@ import os
 def run_wappalyzer(url):
     if "http" not in url:
         url = "http://" + url
-    script_path = "/home/yasin/wappalyzer/src/drivers/npm/cli.js"
+    script_path = "/home/yasin/wappalyzer/src/drivers/npm/cli.js" ##https://github.com/tomnomnom/wappalyzer.git
     print(url)
     command = ["node", script_path, url]
 
