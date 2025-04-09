@@ -12,6 +12,7 @@ from modules import smap
 from modules import katana
 from modules import js_endpoints
 from modules import nmap_scan
+from modules import waf_scan
 
 def passive_recon(target: str):
     print(f"[INFO] Starting passive reconnaissance for target: {target}")
@@ -81,7 +82,8 @@ def active_recon(target: str):
     result = {
         "subdomains": None,
         "endpoints": None,
-        "open_ports": None
+        "open_ports": None,
+        "waf" : None
     }
     
     subdomains = []
@@ -103,15 +105,13 @@ def active_recon(target: str):
     linfinder_results = js_endpoints.linkfinder(target)
     endpoints.extend(linfinder_results)
     
-    # TO BE DONE: NMAP Scan
+    # NMAP Scan
     print("[INFO] Scanning Ports with NMAP...")
     open_ports = nmap_scan.scan_with_nmap(target)
 
     # Yazılım ve WAF tespiti
-    print("[TO BE DONE] Add software and WAF detection logic here.")
-
-    # CDN Tespiti
-    print("[TO BE DONE] Implement CDN detection logic here.")
+    print("[INFO] Running wafw00f to identify WAF and CDN")
+    waf = waf_scan.run_wafw00f(target)
 
     # Cloud Provider Check
     print("[TO BE DONE] Determine if the address belongs to a cloud provider.")
@@ -122,7 +122,7 @@ def active_recon(target: str):
     result["endpoints"] = list(set(endpoints))
     result["subdomains"] = list(set(subdomains))
     result["open_ports"] = open_ports
-
+    result["waf"] = waf
     
     return result
 

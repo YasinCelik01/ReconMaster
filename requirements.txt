@@ -4,3 +4,4 @@ shodan
 beautifulsoup4
 python-dotenv
 python-whois
+wafw00f

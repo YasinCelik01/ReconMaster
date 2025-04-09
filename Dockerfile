@@ -28,7 +28,8 @@ RUN go install github.com/incogbyte/shosubgo@latest \
     && go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest \
     && go install github.com/projectdiscovery/katana/cmd/katana@latest \
     && go install github.com/gwen001/github-subdomains@latest \
-    && go install github.com/s0md3v/smap/cmd/smap@latest
+    && go install github.com/s0md3v/smap/cmd/smap@latest \
+    && go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
 
 # Python bağımlılıkları
 WORKDIR /app

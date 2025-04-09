@@ -1,0 +1,1 @@
+   https://balpars.com   https://balpars.com/?iozypkmp=%3Cscript%3Ealert%28%22XSS%22%29%3B%3C%2Fscript%3E&iezlidpi=UNION+SELECT+ALL+FROM+information_schema+AND+%22+or+SLEEP%285%29+or+%22&wxchsqgq=..%2F..%2Fetc%2Fpasswd (Fastly)   Fastly
