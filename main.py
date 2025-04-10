@@ -13,6 +13,7 @@ from modules import katana
 from modules import js_endpoints
 from modules import nmap_scan
 from modules import waf_scan
+from modules import wappalyzer_runner
 
 def passive_recon(target: str):
     print(f"[INFO] Starting passive reconnaissance for target: {target}")
@@ -109,6 +110,9 @@ def active_recon(target: str):
     print("[INFO] Scanning Ports with NMAP...")
     open_ports = nmap_scan.scan_with_nmap(target)
 
+    # Kullanılan teknolojilerin tespiti
+    print("[INFO] Running wappalyzer...")
+    wappalyzer = wappalyzer_runner.run_wappalyzer(target)
     # Yazılım ve WAF tespiti
     print("[INFO] Running wafw00f to identify WAF and CDN")
     waf = waf_scan.run_wafw00f(target)
@@ -123,7 +127,7 @@ def active_recon(target: str):
     result["subdomains"] = list(set(subdomains))
     result["open_ports"] = open_ports
     result["waf"] = waf
-    
+    result["wappalyzer"] = wappalyzer
     return result
 
 
