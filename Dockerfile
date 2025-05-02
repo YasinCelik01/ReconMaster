@@ -29,7 +29,16 @@ RUN go install github.com/incogbyte/shosubgo@latest \
     && go install github.com/projectdiscovery/katana/cmd/katana@latest \
     && go install github.com/gwen001/github-subdomains@latest \
     && go install github.com/s0md3v/smap/cmd/smap@latest \
-    && go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+    && go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest \
+    && go install -v github.com/projectdiscovery/wappalyzergo/cmd/update-fingerprints@latest
+
+
+# Go‑Wappalyzer CLI
+COPY modules/go-wappalyzer /go-wappalyzer
+RUN cd /go-wappalyzer && \
+     go get github.com/projectdiscovery/wappalyzergo@latest && \
+     go mod tidy && \
+     go build -o /usr/local/bin/wappalyzergo-cli ./main.go
 
 # Python bağımlılıkları
 WORKDIR /app
