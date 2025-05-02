@@ -4,16 +4,20 @@ import json
 # DNS sorgusu yapan fonksiyon
 def get_dns_info(domain,dns_server):
 
-	result = subprocess.run(['dig', domain, '@' + dns_server, '+short'], capture_output=True, text=True)
+	try:
+		result = subprocess.run(['dig', domain, '@' + dns_server, '+short'], capture_output=True, text=True)
+		ip_addresses = result.stdout.strip().split('\n')
 
-	ip_addresses = result.stdout.strip().split('\n')
+		dns_info = {
+			"domain": domain,
+			"ip_addresses": ip_addresses
+		}
 
-	dns_info = {
-		"domain": domain,
-		"ip_addresses": ip_addresses
-	}
+		return dns_info
+	except Exception as e:
+		print(f"[ERROR] fetch_ip.py : {e}")
+		return 0
 
-	return dns_info
 
 # Main fonksiyonundan çağrılacak
 

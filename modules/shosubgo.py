@@ -3,26 +3,29 @@ from dotenv import load_dotenv
 import os
 
 def run_shosubgo(target: str, key):
-    
-    if not key:
-        print("[INFO] No Shodan Key, skipping shosubgo")
-        return []
+    try:
+        if not key:
+            print("[INFO] No Shodan Key, skipping shosubgo")
+            return []
 
-    COMMAND = [
-        'shosubgo',
-        '-d', target,
-        '-s',
-        key
-    ]
-    process = subprocess.Popen(
-        COMMAND,
-        stdout=subprocess.PIPE,
-        text=True
-    )
-    
-    stdout, stderr = process.communicate()
-    output_list = stdout.splitlines()
-    return output_list
+        COMMAND = [
+            'shosubgo',
+            '-d', target,
+            '-s',
+            key
+        ]
+        process = subprocess.Popen(
+            COMMAND,
+            stdout=subprocess.PIPE,
+            text=True
+        )
+        
+        stdout, stderr = process.communicate()
+        output_list = stdout.splitlines()
+        return output_list
+    except Exception as e:
+        print(f"[ERROR] shosubgo.py : {e}")
+        return []
 
 if __name__ == "__main__":
     load_dotenv()

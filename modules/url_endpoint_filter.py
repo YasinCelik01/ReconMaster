@@ -2,14 +2,18 @@ from urllib.parse import urlparse
 
 # main'den çağırılacak fonskiyon
 def separate_subdomains_and_endpoints(urls):
-    subdomains = []
-    endpoints = []  # Keep the full URLs as they are
-    for url in urls:
-        parsed_url = urlparse(url)
-        # Extract subdomain and keep the full URL for endpoints
-        subdomains.append(parsed_url.netloc)
-        endpoints.append(url)  # Use the original URL as the endpoint
-    return subdomains, endpoints
+    try:
+        subdomains = []
+        endpoints = []  # Keep the full URLs as they are
+        for url in urls:
+            parsed_url = urlparse(url)
+            # Extract subdomain and keep the full URL for endpoints
+            subdomains.append(parsed_url.netloc)
+            endpoints.append(url)  # Use the original URL as the endpoint
+        return subdomains, endpoints
+    except Exception as e:
+        print(f"[ERROR] url_endpoint_filter.py : {e}")
+        return [], []
 
 def main():
     url_list = [

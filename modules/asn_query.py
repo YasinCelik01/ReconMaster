@@ -10,17 +10,21 @@ def asn_to_ip(asn_number:str):
 
 def ip_to_asn(ip_address:str):
     
-    URL = f"https://ip.guide/{ip_address}"
-    response = requests.get(URL)
-    ip_info = response.json()
-    
-    # CIDR yapınca response json yapısında değişiklik oluyor
-    if '/' in ip_address:
-        ASN = ip_info['autonomous_system']['asn']
-    else:
-        ASN = ip_info['network']['autonomous_system']['asn']
-    
-    return "AS"+str(ASN)
+    try:
+        URL = f"https://ip.guide/{ip_address}"
+        response = requests.get(URL)
+        ip_info = response.json()
+        
+        # CIDR yapınca response json yapısında değişiklik oluyor
+        if '/' in ip_address:
+            ASN = ip_info['autonomous_system']['asn']
+        else:
+            ASN = ip_info['network']['autonomous_system']['asn']
+        
+        return "AS"+str(ASN)
+    except Exception as e:
+        print(f"[ERROR] asn_query.py : {e}")
+        return 0
 
 if __name__ == "__main__":
     
