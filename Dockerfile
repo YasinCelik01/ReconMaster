@@ -47,4 +47,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["python", "main.py"]
+# ENTRYPOINT + default CMD
+ENTRYPOINT ["python", "-u","main.py"]
+CMD ["--url", "balpars.com", "--no-gui"]

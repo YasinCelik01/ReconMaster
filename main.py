@@ -1,5 +1,6 @@
 import os
 import pprint
+import argparse
 from dotenv import load_dotenv
 from modules import whois_fetcher
 from modules import fetch_ip
@@ -14,6 +15,7 @@ from modules import js_endpoints
 from modules import nmap_scan
 from modules import waf_scan
 from modules import wappalyzer_runner
+
 
 def passive_recon(target: str):
     print(f"[INFO] Starting passive reconnaissance for target: {target}")
@@ -131,19 +133,34 @@ def active_recon(target: str):
     return result
 
 
+
 def main():
-    TARGET = "balpars.com"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--url", default="balpars.com", help="Target URL or domain")
+    parser.add_argument("--no-gui", action="store_true", help="Disable Flask GUI")
+    args = parser.parse_args()
+
+    TARGET = args.url
     print(f"[INFO] Starting reconnaissance for target: {TARGET}")
-    
+
+    if not args.no_gui:
+        # Flask uygulamasını burada çağır
+        #app.run(host="0.0.0.0", port=5000)
+        return
+
+    # Eğer no-gui modundaysa terminal çıktısı verir:
     passive_result = passive_recon(TARGET)
     active_result = active_recon(TARGET)
 
+    import pprint
     pp = pprint.PrettyPrinter(depth=4)
-
     print("\n=== PASSIVE RECON RESULTS ===")
     pp.pprint(passive_result)
     print("\n=== ACTIVE RECON RESULTS ===")
     pp.pprint(active_result)
+
+
+
 
 
 if __name__ == "__main__":
