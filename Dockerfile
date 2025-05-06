@@ -49,4 +49,7 @@ COPY . .
 
 # ENTRYPOINT + default CMD
 ENTRYPOINT ["python", "-u","main.py"]
-CMD ["--url", "balpars.com", "--no-gui"]
+CMD ["--url", "balpars.com"]
+
+# Web arayüzü için port açıklığı
+EXPOSE 5000

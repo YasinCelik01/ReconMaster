@@ -1,14 +1,17 @@
+version: '3'
+
 services:
   recon:
     build: .
     image: recon-tool
-    env_file: .env
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
     environment:
       - SHODAN_API_KEY=${SHODAN_API_KEY}
       - GITHUB_SEARCH_TOKEN=${GITHUB_SEARCH_TOKEN}
     stdin_open: true  # -i equivalent
     tty: true         # -t equivalent
-    volumes:
-      - .:/app
-    working_dir: /app
+    command: ["--url", "balpars.com"]  # Varsayılan komut (arayüzlü mod)
 

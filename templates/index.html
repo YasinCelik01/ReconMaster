@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReconMaster</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .result-section {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">ReconMaster</h1>
+        
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card">
+                    <div class="card-body">
+                        <form method="POST" action="/">
+                            <div class="mb-3">
+                                <label for="url" class="form-label">Target URL or Domain</label>
+                                <input type="text" class="form-control" id="url" name="url" required 
+                                       placeholder="example.com" value="{{ request.form.url if request.form.url else '' }}">
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary" onclick="showLoading()">Start Reconnaissance</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="loading" class="loading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Running reconnaissance... This may take a few minutes.</p>
+                </div>
+
+                {% if results %}
+                <div class="result-section">
+                    <h3>Results</h3>
+                    
+                    {% if results.passive %}
+                    <div class="mb-4">
+                        <h4>Passive Reconnaissance</h4>
+                        <div class="accordion" id="passiveAccordion">
+                            {% if results.passive.whois_result %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#whoisCollapse">
+                                        WHOIS Information
+                                    </button>
+                                </h2>
+                                <div id="whoisCollapse" class="accordion-collapse collapse show" data-bs-parent="#passiveAccordion">
+                                    <div class="accordion-body">
+                                        <pre>{{ results.passive.whois_result }}</pre>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if results.passive.dns_info %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#dnsCollapse">
+                                        DNS Information
+                                    </button>
+                                </h2>
+                                <div id="dnsCollapse" class="accordion-collapse collapse" data-bs-parent="#passiveAccordion">
+                                    <div class="accordion-body">
+                                        <pre>{{ results.passive.dns_info }}</pre>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if results.passive.subdomains %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#subdomainsCollapse">
+                                        Subdomains ({{ results.passive.subdomains|length }} found)
+                                    </button>
+                                </h2>
+                                <div id="subdomainsCollapse" class="accordion-collapse collapse" data-bs-parent="#passiveAccordion">
+                                    <div class="accordion-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Subdomain</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for subdomain in results.passive.subdomains %}
+                                                    <tr>
+                                                        <td>{{ loop.index }}</td>
+                                                        <td>{{ subdomain }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if results.passive.endpoints %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#passiveEndpointsCollapse">
+                                        Passive Endpoints ({{ results.passive.endpoints|length }} found)
+                                    </button>
+                                </h2>
+                                <div id="passiveEndpointsCollapse" class="accordion-collapse collapse" data-bs-parent="#passiveAccordion">
+                                    <div class="accordion-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Endpoint</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for endpoint in results.passive.endpoints %}
+                                                    <tr>
+                                                        <td>{{ loop.index }}</td>
+                                                        <td>{{ endpoint }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if results.passive.open_ports %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#passivePortsCollapse">
+                                        Open Ports ({{ results.passive.open_ports|length }} found)
+                                    </button>
+                                </h2>
+                                <div id="passivePortsCollapse" class="accordion-collapse collapse" data-bs-parent="#passiveAccordion">
+                                    <div class="accordion-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Port Information</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for port in results.passive.open_ports %}
+                                                    <tr>
+                                                        <td>{{ loop.index }}</td>
+                                                        <td>{{ port }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if results.active %}
+                    <div>
+                        <h4>Active Reconnaissance</h4>
+                        <div class="accordion" id="activeAccordion">
+                            {% if results.active.endpoints %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#endpointsCollapse">
+                                        Endpoints ({{ results.active.endpoints|length }} found)
+                                    </button>
+                                </h2>
+                                <div id="endpointsCollapse" class="accordion-collapse collapse show" data-bs-parent="#activeAccordion">
+                                    <div class="accordion-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Endpoint</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for endpoint in results.active.endpoints %}
+                                                    <tr>
+                                                        <td>{{ loop.index }}</td>
+                                                        <td>{{ endpoint }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if results.active.open_ports %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#portsCollapse">
+                                        Open Ports ({{ results.active.open_ports|length }} found)
+                                    </button>
+                                </h2>
+                                <div id="portsCollapse" class="accordion-collapse collapse" data-bs-parent="#activeAccordion">
+                                    <div class="accordion-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-striped">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Port Information</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                {% for port in results.active.open_ports %}
+                                                    <tr>
+                                                        <td>{{ loop.index }}</td>
+                                                        <td>{{ port }}</td>
+                                                    </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if results.active.waf %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#wafCollapse">
+                                        WAF Information
+                                    </button>
+                                </h2>
+                                <div id="wafCollapse" class="accordion-collapse collapse" data-bs-parent="#activeAccordion">
+                                    <div class="accordion-body">
+                                        <pre>{{ results.active.waf }}</pre>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if results.active.wappalyzer %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#techCollapse">
+                                        Technologies (Wappalyzer)
+                                    </button>
+                                </h2>
+                                <div id="techCollapse" class="accordion-collapse collapse" data-bs-parent="#activeAccordion">
+                                    <div class="accordion-body">
+                                        <pre>{{ results.active.wappalyzer|tojson(indent=2) }}</pre>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+    </script>
+</body>
+</html> 

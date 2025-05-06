@@ -2,6 +2,7 @@ import os
 import pprint
 import argparse
 from dotenv import load_dotenv
+from flask import Flask, render_template, request
 from modules import whois_fetcher
 from modules import fetch_ip
 from modules import subfinder
@@ -16,6 +17,7 @@ from modules import nmap_scan
 from modules import waf_scan
 from modules import wappalyzer_runner
 
+app = Flask(__name__)
 
 def passive_recon(target: str):
     print(f"[INFO] Starting passive reconnaissance for target: {target}")
@@ -125,11 +127,25 @@ def active_recon(target: str):
     
     print("[INFO] Active reconnaissance completed.")
     
-    result["endpoints"] = list(set(endpoints))
+    # Tüm endpointleri birleştir ve temizle
+    all_endpoints = []
+    if katana_endpoints:
+        all_endpoints.extend(katana_endpoints)
+    if linfinder_results:
+        all_endpoints.extend(linfinder_results)
+    
+    # Tekrarlanan endpointleri temizle
+    result["endpoints"] = list(set(all_endpoints))
     result["subdomains"] = list(set(subdomains))
     result["open_ports"] = open_ports
     result["waf"] = waf
     result["wappalyzer"] = wappalyzer
+    
+    # Debug için endpoint sayısını yazdır
+    print(f"[DEBUG] Total endpoints found: {len(result['endpoints'])}")
+    print(f"[DEBUG] Katana endpoints: {len(katana_endpoints)}")
+    print(f"[DEBUG] LinkFinder endpoints: {len(linfinder_results)}")
+    
     return result
 
 
@@ -144,8 +160,7 @@ def main():
     print(f"[INFO] Starting reconnaissance for target: {TARGET}")
 
     if not args.no_gui:
-        # Flask uygulamasını burada çağır
-        #app.run(host="0.0.0.0", port=5000)
+        app.run(host="0.0.0.0", port=5000)
         return
 
     # Eğer no-gui modundaysa terminal çıktısı verir:
@@ -159,9 +174,45 @@ def main():
     print("\n=== ACTIVE RECON RESULTS ===")
     pp.pprint(active_result)
 
-
-
-
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        target = request.form.get('url')
+        if target:
+            # Sonuçları al
+            passive_result = passive_recon(target)
+            active_result = active_recon(target)
+            
+            # Debug için sonuçları yazdır
+            print("\n=== WEB UI RESULTS ===")
+            print(f"Passive endpoints: {len(passive_result.get('endpoints', []))}")
+            print(f"Active endpoints: {len(active_result.get('endpoints', []))}")
+            print(f"Passive open ports: {len(passive_result.get('open_ports', []))}")
+            print(f"Active open ports: {len(active_result.get('open_ports', []))}")
+            print(f"Wappalyzer results: {active_result.get('wappalyzer')}")
+            
+            # Sonuçları düzenle
+            if passive_result.get('endpoints'):
+                passive_result['endpoints'] = list(set(passive_result['endpoints']))
+            if active_result.get('endpoints'):
+                active_result['endpoints'] = list(set(active_result['endpoints']))
+            if passive_result.get('subdomains'):
+                passive_result['subdomains'] = list(set(passive_result['subdomains']))
+            if active_result.get('subdomains'):
+                active_result['subdomains'] = list(set(active_result['subdomains']))
+            
+            # Boş listeleri None yerine boş liste olarak ayarla
+            if not passive_result.get('open_ports'):
+                passive_result['open_ports'] = []
+            if not active_result.get('open_ports'):
+                active_result['open_ports'] = []
+            
+            # Sonuçları template'e gönder
+            return render_template('index.html', results={
+                'passive': passive_result,
+                'active': active_result
+            })
+    return render_template('index.html')
 
 if __name__ == "__main__":
     main()
