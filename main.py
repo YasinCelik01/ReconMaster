@@ -16,6 +16,7 @@ from modules import js_endpoints
 from modules import nmap_scan
 from modules import waf_scan
 from modules import wappalyzer_runner
+from modules import google_dorks_scraper
 
 app = Flask(__name__)
 
@@ -69,9 +70,18 @@ def passive_recon(target: str):
     wayback_subdomains, wayback_endpoints = separate_subdomains_and_endpoints(wayback_200_results)
     subdomains.extend(wayback_subdomains)
     
+    # Google Dorks
+    dork_list= [f"site:{target}"]
+    print("[INFO] Running Google Dorks...")
+    google_dorks_results = google_dorks_scraper.google_scraper(dork_list)
+    print(f"[INFO] Google Dorks results: {google_dorks_results}")
+    result["endpoints"] = list(set(google_dorks_results))
+
     result["subdomains"] = list(set(subdomains))
     result["endpoints"] = list(set(wayback_endpoints))
     
+
+
     # SMAP Port Scan
     print("[INFO] Running SMAP port scan...")
     open_ports = smap.smap_scan(target)

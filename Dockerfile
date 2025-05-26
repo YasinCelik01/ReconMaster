@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.10
 
 # Tüm sistem bağımlılıkları
 RUN apt-get update && apt-get install -y \
@@ -8,6 +8,9 @@ RUN apt-get update && apt-get install -y \
     nmap \
     ca-certificates \
     libnss3 \
+    xvfb \
+    x11vnc \
+    xauth \
     && wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
     && apt install -y ./google-chrome-stable_current_amd64.deb \
     && rm google-chrome-stable_current_amd64.deb \
@@ -45,10 +48,13 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Set display environment variable
+ENV DISPLAY=:99
+
 COPY . .
 
-# ENTRYPOINT + default CMD
-ENTRYPOINT ["python", "-u","main.py"]
+# Start Xvfb and run the application
+ENTRYPOINT ["sh", "-c", "Xvfb :99 -screen 0 1920x1080x24 & python -u main.py $0 $@"]
 CMD ["--url", "balpars.com"]
 
 # Web arayüzü için port açıklığı

@@ -7,3 +7,5 @@ python-whois
 wafw00f
 flask==3.0.2
 flask-wtf==1.2.1
+nodriver
+pyvirtualdisplay
