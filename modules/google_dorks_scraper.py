@@ -10,6 +10,7 @@ import requests
 import time
 import argparse
 from pyvirtualdisplay import Display
+import shutil
 
 # --- Classes and Global Variables ---
 
@@ -28,7 +29,21 @@ class ResultItem:
 
 SEARCH_QUERY = ""
 PAGE_LIMIT = -1
+SCREENSHOTS_DIR = os.path.join(os.path.dirname(__file__), "chrome_screenshots")
 
+async def take_screenshot(tab, page_number):
+    """Take a screenshot and save it with a timestamp"""
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"page_{page_number}_{timestamp}.png"
+    filepath = os.path.join(SCREENSHOTS_DIR, filename)
+    await tab.save_screenshot(filepath)
+    return filepath
+
+def cleanup_screenshots():
+    """Remove all screenshots from the directory"""
+    if os.path.exists(SCREENSHOTS_DIR):
+        shutil.rmtree(SCREENSHOTS_DIR)
+        os.makedirs(SCREENSHOTS_DIR)
 
 # --- Main Asynchronous Routine ---
 async def main():
@@ -47,7 +62,7 @@ async def main():
         print("[INFO] Waiting for elements to load")
         await tab.find_all('*[src]', timeout=3)
 
-        
+        await take_screenshot(tab, "newtab")
         print("[INFO] Locating the search box...")
         search_boxes = await tab.find_elements_by_text("Search Google or type a URL")
 
@@ -62,6 +77,8 @@ async def main():
         await search_box.click()
         await search_box.send_keys(SEARCH_QUERY)
         await search_box.click()
+        await take_screenshot(tab, "newtab_search_box")
+
         print("[INFO] Pressing Enter to search")
         await driver.wait(2)
         await tab.send(uc.cdp.input_.dispatch_key_event(
@@ -78,6 +95,10 @@ async def main():
             x = random.randint(3, 5)
             await driver.wait(x)
             print(f"[INFO] Extracting titles and URLs from page {page_number}")
+            
+            # Take screenshot of current page
+            await take_screenshot(tab, page_number)
+            
             results = await tab.select_all("h3")
             if not results:
                 print("[INFO] No results found!")
@@ -132,19 +153,29 @@ if __name__ == "__main__":
     args = parser.parse_args()
     SEARCH_QUERY = args.query
     PAGE_LIMIT = int(args.page_limit)
+    os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
     results = uc.loop().run_until_complete(main())
     print(json.dumps([r.to_dict() for r in results], indent=2))
-
+    print("[INFO] Cleaning up screenshots")
+    cleanup_screenshots()
 
 # --- Call This From the Main File ---
 
 def google_scraper(query_list, page_limit=-1):
+    # Ensure screenshots directory exists
+    os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
+    
     all_urls = []
-    for query in query_list:
-        global SEARCH_QUERY, PAGE_LIMIT
-        SEARCH_QUERY = query
-        PAGE_LIMIT = page_limit
-        results = uc.loop().run_until_complete(main())
-        if results:
-            all_urls.extend([r.url for r in results])
-    return all_urls
+    try:
+        for query in query_list:
+            global SEARCH_QUERY, PAGE_LIMIT
+            SEARCH_QUERY = query
+            PAGE_LIMIT = page_limit
+            results = uc.loop().run_until_complete(main())
+            if results:
+                all_urls.extend([r.url for r in results])
+        return all_urls
+    finally:
+        # Clean up screenshots after scraping is done
+        print("[INFO] Cleaning up screenshots")
+        cleanup_screenshots()
