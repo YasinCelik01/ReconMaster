@@ -1,6 +1,13 @@
 import subprocess
+import time
+from modules.log_helper import setup_logger
+
+logger = setup_logger('nmap_scan', 'modules/logs/nmap_scan.log')
 
 def scan_with_nmap(target):
+	start = time.time()
+	logger.info(f"Starting Nmap scan for {target}")
+	
 	try:
 		if not target:
 			return {"error": "No IP addresses provided for scanning"}
@@ -42,13 +49,17 @@ def scan_with_nmap(target):
 					version = " ".join(parts[3:]) if len(parts) > 3 else "N/A"  # Kalanlar versiyon bilgisi
 					extracted_data.append(f"{port_protocol} {service} {version.strip()}")
 		
+		end = time.time()
+		duration = end - start
+		logger.debug(f"Nmap scan completed in {duration:.2f} seconds")
+		
 		return extracted_data
 	except Exception as e:
-		print(f"[ERROR] nmap_scan.py : {e}")
+		logger.exception(f"[ERROR] nmap_scan.py : {e}")
 		return []
 
 def main():
-	print(scan_with_nmap("balpars.com"))
+	logger.info(scan_with_nmap("balpars.com"))
 
 
 if __name__ == "__main__":

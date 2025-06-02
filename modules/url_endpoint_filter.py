@@ -1,4 +1,7 @@
 from urllib.parse import urlparse
+from modules.log_helper import setup_logger
+
+logger = setup_logger('url_endpoint_filter', 'modules/logs/url_endpoint_filter.log')
 
 # main'den çağırılacak fonskiyon
 def separate_subdomains_and_endpoints(urls):
@@ -12,7 +15,7 @@ def separate_subdomains_and_endpoints(urls):
             endpoints.append(url)  # Use the original URL as the endpoint
         return subdomains, endpoints
     except Exception as e:
-        print(f"[ERROR] url_endpoint_filter.py : {e}")
+        logger.exception(f"[ERROR] url_endpoint_filter.py : {e}")
         return [], []
 
 def main():
@@ -24,8 +27,8 @@ def main():
 
     subdomains, endpoints = separate_subdomains_and_endpoints(url_list)
 
-    print("Subdomains:", subdomains)
-    print("Endpoints:", endpoints)
+    logger.info("Subdomains:", subdomains)
+    logger.info("Endpoints:", endpoints)
 
 
 if __name__ == "__main__":

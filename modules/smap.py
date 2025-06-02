@@ -1,6 +1,13 @@
 import subprocess
+import time
+from modules.log_helper import setup_logger
+
+logger = setup_logger('smap', 'modules/logs/smap.log')
 
 def smap_scan(target: str):
+    start = time.time()
+    logger.info(f"Starting SMAP scan for {target}")
+    
     try:
         SMAP_COMMAND = [
             'smap',
@@ -28,11 +35,15 @@ def smap_scan(target: str):
                     version = " ".join(parts[3:]) if len(parts) > 3 else "N/A"  # Kalanlar versiyon bilgisi
                     extracted_data.append(f"{port_protocol} {service} {version.strip()}")
         
+        end = time.time()
+        duration = end - start
+        logger.debug(f"SMAP scan completed in {duration:.2f} seconds")
+        
         return extracted_data
     except Exception as e:
-        print(f"[ERROR] smap.py : {e}")
+        logger.exception(f"[ERROR] smap.py : {e}")
         return []
 
 if __name__ == "__main__":
     result = smap_scan('balpars.com')
-    print(result)
+    logger.info(result)

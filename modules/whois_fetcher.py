@@ -1,7 +1,11 @@
 import whois
 import tldextract
 import json
+import time
 from urllib.parse import urlparse
+from modules.log_helper import setup_logger
+
+logger = setup_logger('whois_fetcher', 'modules/logs/whois_fetcher.log')
 
 def extract_domain(url):
     
@@ -14,7 +18,7 @@ def extract_domain(url):
 		domain = tldextract.extract(parsed_url.netloc)
 		return f"{domain.domain}.{domain.suffix}"
 	except Exception as e:
-		print(f"Error extracting domain: {e}")
+		logger.exception("f[ERROR] extracting domain: {e}")
 		return None
 
 def get_whois_info(domain):
@@ -22,20 +26,28 @@ def get_whois_info(domain):
 		w = whois.whois(domain)
 		return w
 	except Exception as e:
-		print(f"Error fetching WHOIS information: {e}")
+		logger.exception("f[ERROR] fetching WHOIS information: {e}")
 		return None
         
 #main dosyasından çağrılacak fonksiyon
 def fetch_whois_from_url(url):
+	start = time.time()
+	logger.info(f"Starting WHOIS fetch for {url}")
+	
 	domain = extract_domain(url)
 	whois_info = get_whois_info(domain)
+	
+	end = time.time()
+	duration = end - start
+	logger.debug(f"WHOIS fetch completed in {duration:.2f} seconds")
+	
 	return(json.dumps(whois_info, default=str, indent=4))
 
 if __name__ == "__main__":
-	print(whois.__file__)
+	logger.info(whois.__file__)
 	url = "python.org"
 	domain = extract_domain(url)
-	print(f"Extracted domain: {domain}")
+	logger.info(f"Extracted domain: {domain}")
 	result = fetch_whois_from_url(url)
-	print(result)
+	logger.info(result)
 	

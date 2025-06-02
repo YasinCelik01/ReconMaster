@@ -7,6 +7,9 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
 import json
+from modules.log_helper import setup_logger
+
+logger = setup_logger('shodan_tools', 'modules/logs/shodan_tools.log')
 
 def get_favicon_hash(url):
     try:
@@ -18,7 +21,7 @@ def get_favicon_hash(url):
         else:
             raise Exception("Favicon")
     except Exception as e:
-        print(f'{e}')
+        logging.exception(f'[ERROR] get_favicon_hash threw exception: {e}')
 
 def get_favicon_url(site_url):
     if "http" not in site_url:
@@ -28,7 +31,7 @@ def get_favicon_url(site_url):
     try:
         return get_favicon_hash(favicon_url)
     except Exception as e:
-        print(f'get_favicon_url threw exception: {e}')
+        logging.exception(f'[ERROR] get_favicon_url threw exception: {e}')
 
     try:
         parsed_url = urlparse(site_url)
@@ -62,7 +65,7 @@ def api(favhash=None,use_api_key=False, api_key=None):
                 result = key.search(favhash, fields=fields, minify=False)
             return result
     except Exception as e:
-        print(f' Favicon hash threw exception: {e}')
+        logging.exception(f'[ERROR] Favicon hash threw exception: {e}')
         return None
 
 
@@ -79,7 +82,7 @@ def sub_osint(key, domain, ip=None):
         return results
 
     except Exception as e:
-        print(f' Favicon hash threw exception: {e}')
+        logging.exception(f'[ERROR] Favicon hash threw exception: {e}')
         return None
 
 
@@ -89,9 +92,9 @@ if __name__ == "__main__":
     SHODAN_API_KEY = os.getenv("SHODAN_API_KEY")
 
     fhash = get_favicon_url("python.org")
-    print(json.dumps(fhash,indent=4))
+    logging.info(json.dumps(fhash,indent=4))
     fresult = api(fhash,True, SHODAN_API_KEY)
     sub_result = sub_osint(SHODAN_API_KEY, 'python.org')
-    print(json.dumps(fresult,indent=4))
-    print(json.dumps(sub_result,indent=4))
+    logging.info(json.dumps(fresult,indent=4))
+    logging.info(json.dumps(sub_result,indent=4))
 

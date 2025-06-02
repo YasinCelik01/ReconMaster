@@ -1,19 +1,26 @@
 import requests
 import subprocess
 import os
+import time
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 # import json  
+from modules.log_helper import setup_logger
+
+logger = setup_logger('js_endpoints', 'modules/logs/js_endpoints.log')
 
 #Mainden cagrılacak fonksiyon
 def linkfinder(url):
+	start = time.time()
+	logger.info(f"Starting JS endpoints scan for {url}")
+	
 	try:
 		js_files = []
 		result_dict = {}
 
 		if "http" not in url:
 			url = "http://" + url
-		print(url)
+		
 		response = requests.get(url)
 		html_content = response.text
 
@@ -46,12 +53,17 @@ def linkfinder(url):
 		endpoints = []
 		endpoints.extend(result_dict.keys())  # Add JS file URLs
 		endpoints.extend([item for sublist in result_dict.values() for item in sublist])  # Flattened values
+		
+		end = time.time()
+		duration = end - start
+		logger.debug(f"JS endpoints scan completed in {duration:.2f} seconds")
+		
 		return endpoints
 	except Exception as e:
-		print(f"[ERROR] js_endpoints.py : {e}")
+		logger.exception(f"[ERROR] js_endpoints.py : {e}")
 		return []
  
 if __name__ == "__main__":
 	url = 'balpars.com'
-	x = linkfinder(url)
-	print(x)
+	result = linkfinder(url)
+	logger.info(result)

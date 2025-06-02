@@ -1,7 +1,14 @@
 import subprocess
 import os
+import time
+from modules.log_helper import setup_logger
+
+logger = setup_logger('wappalyzer_runner', 'modules/logs/wappalyzer_runner.log')
 
 def run_wappalyzer(url: str):
+    start = time.time()
+    logger.info(f"Starting Wappalyzer scan for {url}")
+    
     # ensure scheme
     if not url.startswith(("http://", "https://")):
         url = "http://" + url
@@ -18,16 +25,22 @@ def run_wappalyzer(url: str):
         )
         out, err = proc.communicate()
         if proc.returncode != 0:
-            print(f"[-] WappalyzerGo hata:\n{err}")
+            logger.exception(f"[ERROR] WappalyzerGo :\n{err}")
             return {}
         # JSON parse
         import json
-        return json.loads(out)
+        result = json.loads(out)
+        
+        end = time.time()
+        duration = end - start
+        logger.debug(f"Wappalyzer scan completed in {duration:.2f} seconds")
+        
+        return result
     except Exception as e:
-        print(f"[-] WappalyzerGo exception: {e}")
+        logger.exception(f"[ERROR] WappalyzerGo exception: {e}")
         return {}
 
 
 if __name__ == "__main__":
     result=run_wappalyzer('balpars.com')
-    print(result)
+    logger.info(result)

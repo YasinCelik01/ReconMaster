@@ -20,6 +20,13 @@ from modules import waf_scan
 from modules import wappalyzer_runner
 from modules import google_dorks_scraper
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(levelname)s] [%(threadName)s] %(message)s'
+)
+
 
 app = Flask(__name__)
 

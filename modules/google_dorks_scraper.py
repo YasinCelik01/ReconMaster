@@ -12,7 +12,9 @@ import argparse
 from pyvirtualdisplay import Display
 import shutil
 import time
+from modules.log_helper import setup_logger
 
+logger = setup_logger('google_dorks_scraper', 'modules/logs/google_dorks_scraper.log')
 
 # --- Classes and Global Variables ---
 
@@ -54,34 +56,30 @@ async def main():
     display.start()
     time.sleep(2)
     try:
-        print("[INFO] Initializing the web driver for Google Dorks")
+        logger.info("Initializing Google Dorks scanner")
         driver = await uc.start(headless=False,  # Changed to False since we're using virtual display
                     browser_args=['--disable-web-security'],)
 
         await driver.wait(5)
-        print("[INFO] Navigating to the New Tab Page")
+        logger.debug("Navigating to search page")
         tab = await driver.get("Chrome://new-tab-page")
-        print("[INFO] Waiting for elements to load")
         await tab.find_all('*[src]', timeout=3)
 
         await take_screenshot(tab, "newtab")
-        print("[INFO] Locating the search box...")
         search_boxes = await tab.find_elements_by_text("Search Google or type a URL")
 
         if not search_boxes:
             search_boxes = await tab.find_elements_by_text("Google'da arayın veya URL'yi yazın")
         if not search_boxes:
-            print("[ERROR] Search box not found!")
+            logger.error("Search box not found")
             return []
         search_box = search_boxes[0]
-        print("[INFO] Clicking the search box and entering query")
-        print("[INFO] Query is", SEARCH_QUERY)
+        logger.debug(f"Searching for: {SEARCH_QUERY}")
         await search_box.click()
         await search_box.send_keys(SEARCH_QUERY)
         await search_box.click()
         await take_screenshot(tab, "newtab_search_box")
 
-        print("[INFO] Pressing Enter to search")
         await driver.wait(3)
         await tab.send(uc.cdp.input_.dispatch_key_event(
             type_="rawKeyDown", key="Enter", code="Enter", windows_virtual_key_code=13))
@@ -96,14 +94,14 @@ async def main():
         while True:
             x = random.randint(3, 5)
             await driver.wait(x)
-            print(f"[INFO] Extracting titles and URLs from page {page_number}")
+            logger.debug(f"Processing page {page_number}")
             
             # Take screenshot of current page
             await take_screenshot(tab, page_number)
             
             results = await tab.select_all("h3")
             if not results:
-                print("[INFO] No results found!")
+                logger.info("No results found")
                 return []
 
             for r in results:
@@ -111,30 +109,27 @@ async def main():
                 if r_url and not any(item.url == r_url for item in result_items):
                     result_items.append(ResultItem(r_url, r.text, ""))
 
-            print("[INFO] Looking for next page...")
             next_page = await tab.find_elements_by_text("Sonraki", tag_hint="span")
 
             if not next_page:
                 next_page = await tab.find_elements_by_text("Next", tag_hint="span")
 
             if not next_page or "script" in str(next_page):
-                print("[INFO] No next page found. Ending search.")
+                logger.debug("Search completed")
                 break
 
             next_page = next_page[0]
             page_number += 1
 
             if PAGE_LIMIT != -1 and page_number > PAGE_LIMIT:
-                print(f"[INFO] Page limit of {PAGE_LIMIT} reached.")
+                logger.debug(f"Reached page limit of {PAGE_LIMIT}")
                 break
 
-            print("[INFO] Clicking next page")
             await next_page.click()
 
-        print("[INFO] Search finished. Found results:")
+        logger.info(f"Google Scraper Found {len(result_items)} results:")
         for item in result_items:
-            print(f" - {item.title}: {item.url}")
-        print(f"[INFO] Total results: {len(result_items)} in {page_number} pages")
+            logger.info(f" - {item.title}: {item.url}")
         
         return result_items
 
@@ -157,13 +152,16 @@ if __name__ == "__main__":
     PAGE_LIMIT = int(args.page_limit)
     os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
     results = uc.loop().run_until_complete(main())
-    print(json.dumps([r.to_dict() for r in results], indent=2))
-    print("[INFO] Cleaning up screenshots")
+    logger.debug(json.dumps([r.to_dict() for r in results], indent=2))
+    logger.debug("[INFO] Cleaning up screenshots")
     cleanup_screenshots()
 
 # --- Call This From the Main File ---
 
 def google_scraper(query_list, page_limit=-1):
+    start = time.time()
+    logger.info(f"Starting Google dorks scan for queries: {query_list}")
+    
     # Ensure screenshots directory exists
     os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
     
@@ -176,8 +174,13 @@ def google_scraper(query_list, page_limit=-1):
             results = uc.loop().run_until_complete(main())
             if results:
                 all_urls.extend([r.url for r in results])
+        
+        end = time.time()
+        duration = end - start
+        logger.debug(f"Google dorks scan completed in {duration:.2f} seconds")
+        
         return all_urls
     finally:
         # Clean up screenshots after scraping is done
-        print("[INFO] Cleaning up screenshots")
+        logger.debug("Cleaning up screenshots")
         cleanup_screenshots()

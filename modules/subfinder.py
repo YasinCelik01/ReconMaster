@@ -1,7 +1,14 @@
 import subprocess
 import json
+from modules.log_helper import setup_logger
+import time
+
+logger = setup_logger('subfinder', 'modules/logs/subfinder.log')
 
 def run_subfinder(domain):
+    start = time.time()
+    logger.info(f"Starting subfinder scan for {domain}")
+    
     command = ['subfinder', '-d', domain, '-oJ', '-silent']
     try:
         result = subprocess.run(
@@ -12,7 +19,7 @@ def run_subfinder(domain):
             check=True
         )
     except subprocess.CalledProcessError as e:
-        print(f"Error running Subfinder: {e.stderr}")
+        logger.error(f"Subfinder execution failed: {e.stderr}")
         return []
 
     subdomains = []
@@ -24,11 +31,15 @@ def run_subfinder(domain):
                 if host:
                     subdomains.append(host)
             except json.JSONDecodeError as e:
-                print(f"Error parsing JSON: {e}")
+                logger.error(f"Failed to parse JSON: {e}")
                 continue
     
+    end = time.time()
+    duration = end - start
+    logger.debug(f"Subfinder found {len(subdomains)} subdomains in {duration:.2f} seconds")
+    logger.debug(f"Subdomains: {subdomains}")
     return subdomains
 
 if __name__ == "__main__":
     result = run_subfinder("balpars.com")
-    print(result)
+    logger.info(result)
