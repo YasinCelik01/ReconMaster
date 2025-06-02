@@ -54,8 +54,7 @@ ENV DISPLAY=:99
 COPY . .
 
 # Start Xvfb and run the application
-ENTRYPOINT ["sh", "-c", "Xvfb :99 -screen 0 1920x1080x24 & python -u main.py $0 $@"]
-CMD ["--url", "balpars.com"]
+ENTRYPOINT ["sh", "-c", "Xvfb :99 -screen 0 1920x1080x24 & python -u main.py $*"]
 
 # Web arayüzü için port açıklığı
 EXPOSE 5000

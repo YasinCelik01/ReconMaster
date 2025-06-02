@@ -6,3 +6,14 @@
 - Google scraper eklendi. üzerinde çalışlımaya devam edilecek
 1 - bulunan sonuçların endpoint mi yoksa yeni subdomain mi bunu ayrıştırmak gerekiyor.
 2 - dork listesini genişletmek gerek.
+
+2 Haziran
+
+Pasif recon 33 saniye
+Aktif recon 61 saniye
+Toplam      94 saniye
+
+Multihthread sonrası
+Pasif recon 16 saniye
+Aktif recon 53 saniye
+Toplam      53 saniye

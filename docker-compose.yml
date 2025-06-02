@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   recon:
     build: .
@@ -9,12 +7,12 @@ services:
     volumes:
       - .:/app
     environment:
+        # API Keys, .env dosyasında bulunuyor.
       - SHODAN_API_KEY=${SHODAN_API_KEY}
       - GITHUB_SEARCH_TOKEN=${GITHUB_SEARCH_TOKEN}
       - DISPLAY=:99
     stdin_open: true  # -i equivalent
     tty: true         # -t equivalent
-    command: ["--url", "balpars.com"]  # Default command for web UI
     privileged: true  # Required for Xvfb
     shm_size: '2gb'   # Increase shared memory for Chrome
 

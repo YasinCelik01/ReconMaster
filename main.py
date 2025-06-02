@@ -1,6 +1,8 @@
 import os
 import pprint
 import argparse
+import time
+import concurrent.futures
 from dotenv import load_dotenv
 from flask import Flask, render_template, request
 from modules import whois_fetcher
@@ -18,9 +20,12 @@ from modules import waf_scan
 from modules import wappalyzer_runner
 from modules import google_dorks_scraper
 
+
 app = Flask(__name__)
 
 def passive_recon(target: str):
+    start = time.time()
+
     print(f"[INFO] Starting passive reconnaissance for target: {target}")
     
     result = {
@@ -35,147 +40,123 @@ def passive_recon(target: str):
     SHODAN_API_KEY = os.getenv("SHODAN_API_KEY")
     GITHUB_SEARCH_TOKEN = os.getenv("GITHUB_SEARCH_TOKEN")
 
-    # Whois
-    print("[INFO] Fetching WHOIS information...")
-    whois_result = whois_fetcher.fetch_whois_from_url(target)
-    result["whois_result"] = whois_result
+    # Create a thread pool for parallel execution
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+        # Submit tasks
+        whois_future = executor.submit(whois_fetcher.fetch_whois_from_url, target)
+        dns_future = executor.submit(fetch_ip.fetch_ip_from_url, target)
+        subfinder_future = executor.submit(subfinder.run_subfinder, target)
+        shosubgo_future = executor.submit(shosubgo.run_shosubgo, target, SHODAN_API_KEY)
+        github_future = executor.submit(github_subdomains.run_gh_subdomains, target, GITHUB_SEARCH_TOKEN)
+        wayback_future = executor.submit(wayback.fetch_wayback_200, target)
+        smap_future = executor.submit(smap.smap_scan, target)
+        google_dorks_future = executor.submit(google_dorks_scraper.google_scraper, [f"site:{target}"])
 
-    # DNS Info
-    print("[INFO] Fetching DNS information...")
-    dns_info = fetch_ip.fetch_ip_from_url(target)
-    result["dns_info"] = dns_info
-
-    # Subdomain Enumeration
-    subdomains = []
-    print("[INFO] Starting subdomain enumeration...")
-    
-    ## Subfinder
-    print("[INFO] Running Subfinder...")
-    subfinder_results = subfinder.run_subfinder(target)
-    subdomains.extend(subfinder_results)
-    
-    ## Shodan
-    print("[INFO] Running Shosubgo...")
-    shosubgo_results = shosubgo.run_shosubgo(target, SHODAN_API_KEY)
-    subdomains.extend(shosubgo_results)
-    
-    ## GitHub Subdomains
-    print("[INFO] Searching for subdomains via GitHub...")
-    github_subdomains_result = github_subdomains.run_gh_subdomains(target, GITHUB_SEARCH_TOKEN)
-    subdomains.extend(github_subdomains_result)
-
-    ## Wayback
-    print("[INFO] Fetching subdomains and endpoints from Wayback Machine...")
-    wayback_200_results = wayback.fetch_wayback_200(target)
-    wayback_subdomains, wayback_endpoints = separate_subdomains_and_endpoints(wayback_200_results)
-    subdomains.extend(wayback_subdomains)
-    
-    # Google Dorks
-    dork_list= [f"site:{target}"]
-    print("[INFO] Running Google Dorks...")
-    google_dorks_results = google_dorks_scraper.google_scraper(dork_list)
-    print(f"[INFO] Google Dorks results: {google_dorks_results}")
-    result["endpoints"] = list(set(google_dorks_results))
-
-    result["subdomains"] = list(set(subdomains))
-    result["endpoints"] = list(set(wayback_endpoints))
-    
-
-
-    # SMAP Port Scan
-    print("[INFO] Running SMAP port scan...")
-    open_ports = smap.smap_scan(target)
-    result["open_ports"] = open_ports
+        # Get results as they complete
+        result["whois_result"] = whois_future.result()
+        result["dns_info"] = dns_future.result()
+        
+        # Collect subdomain results
+        subdomains = []
+        subdomains.extend(subfinder_future.result())
+        subdomains.extend(shosubgo_future.result())
+        subdomains.extend(github_future.result())
+        
+        # Get wayback results
+        wayback_200_results = wayback_future.result()
+        wayback_subdomains, wayback_endpoints = separate_subdomains_and_endpoints(wayback_200_results)
+        subdomains.extend(wayback_subdomains)
+        
+        # Get other results
+        result["open_ports"] = smap_future.result()
+        google_dorks_results = google_dorks_future.result()
+        
+        result["subdomains"] = list(set(subdomains))
+        result["endpoints"] = list(set(wayback_endpoints + google_dorks_results))
     
     print("[INFO] Passive reconnaissance completed.")
+    end = time.time()
+    print(f"Time taken for passive recon was {end-start} seconds")
     return result
 
 
 def active_recon(target: str):
+    start = time.time()
     print(f"[INFO] Starting active reconnaissance for target: {target}")
     
     result = {
         "subdomains": None,
         "endpoints": None,
         "open_ports": None,
-        "waf" : None
+        "waf": None,
+        "wappalyzer": None
     }
     
-    subdomains = []
-    endpoints = []
-    open_ports = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        # Submit tasks
+        katana_future = executor.submit(katana.katana_scan, target)
+        linkfinder_future = executor.submit(js_endpoints.linkfinder, target)
+        nmap_future = executor.submit(nmap_scan.scan_with_nmap, target)
+        wappalyzer_future = executor.submit(wappalyzer_runner.run_wappalyzer, target)
+        waf_future = executor.submit(waf_scan.run_wafw00f, target)
 
-    # Crawling
-    print("[INFO] Starting crawling...")
-    
-    ## Katana
-    print("[INFO] Running Katana for subdomain and endpoint discovery...")
-    katana_results = katana.katana_scan(target)
-    katana_subdomains, katana_endpoints = separate_subdomains_and_endpoints(katana_results)
-    subdomains.extend(katana_subdomains)
-    endpoints.extend(katana_endpoints)
-    
-    ## JS Endpoints
-    print("[INFO] Extracting JS endpoints with LinkFinder...")
-    linfinder_results = js_endpoints.linkfinder(target)
-    endpoints.extend(linfinder_results)
-    
-    # NMAP Scan
-    print("[INFO] Scanning Ports with NMAP...")
-    open_ports = nmap_scan.scan_with_nmap(target)
+        # Get results
+        katana_results = katana_future.result()
+        katana_subdomains, katana_endpoints = separate_subdomains_and_endpoints(katana_results)
+        linfinder_results = linkfinder_future.result()
+        open_ports = nmap_future.result()
+        wappalyzer = wappalyzer_future.result()
+        waf = waf_future.result()
 
-    # Kullanılan teknolojilerin tespiti
-    print("[INFO] Running wappalyzer...")
-    wappalyzer = wappalyzer_runner.run_wappalyzer(target)
-    # Yazılım ve WAF tespiti
-    print("[INFO] Running wafw00f to identify WAF and CDN")
-    waf = waf_scan.run_wafw00f(target)
+        # Combine and clean up results
+        all_endpoints = []
+        if katana_endpoints:
+            all_endpoints.extend(katana_endpoints)
+        if linfinder_results:
+            all_endpoints.extend(linfinder_results)
+        
+        result["endpoints"] = list(set(all_endpoints))
+        result["subdomains"] = list(set(katana_subdomains))
+        result["open_ports"] = open_ports
+        result["waf"] = waf
+        result["wappalyzer"] = wappalyzer
 
-    # Cloud Provider Check
-    print("[TO BE DONE] Determine if the address belongs to a cloud provider.")
-    print("[TO BE DONE] integrate CloudRecon (may take 2-3 hours without a ready database).")
-    
     print("[INFO] Active reconnaissance completed.")
-    
-    # Tüm endpointleri birleştir ve temizle
-    all_endpoints = []
-    if katana_endpoints:
-        all_endpoints.extend(katana_endpoints)
-    if linfinder_results:
-        all_endpoints.extend(linfinder_results)
-    
-    # Tekrarlanan endpointleri temizle
-    result["endpoints"] = list(set(all_endpoints))
-    result["subdomains"] = list(set(subdomains))
-    result["open_ports"] = open_ports
-    result["waf"] = waf
-    result["wappalyzer"] = wappalyzer
-    
-    # Debug için endpoint sayısını yazdır
     print(f"[DEBUG] Total endpoints found: {len(result['endpoints'])}")
     print(f"[DEBUG] Katana endpoints: {len(katana_endpoints)}")
     print(f"[DEBUG] LinkFinder endpoints: {len(linfinder_results)}")
     
+    end = time.time()
+    print(f"Time taken for the active recon was {end-start} seconds")
     return result
 
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--url", default="balpars.com", help="Target URL or domain")
+    parser.add_argument("--url", help="Target URL or domain (required in no-gui mode)")
     parser.add_argument("--no-gui", action="store_true", help="Disable Flask GUI")
     args = parser.parse_args()
 
-    TARGET = args.url
-    print(f"[INFO] Starting reconnaissance for target: {TARGET}")
+    if args.no_gui and not args.url:
+        parser.error("--url is required when running in no-gui mode")
 
     if not args.no_gui:
         app.run(host="0.0.0.0", port=5000)
         return
 
     # Eğer no-gui modundaysa terminal çıktısı verir:
-    passive_result = passive_recon(TARGET)
-    active_result = active_recon(TARGET)
+    TARGET = args.url
+    print(f"[INFO] Starting reconnaissance for target: {TARGET}")
+    
+    # Run both scans in parallel
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        passive_future = executor.submit(passive_recon, TARGET)
+        active_future = executor.submit(active_recon, TARGET)
+        
+        # Get results
+        passive_result = passive_future.result()
+        active_result = active_future.result()
 
     import pprint
     pp = pprint.PrettyPrinter(depth=4)
@@ -189,10 +170,17 @@ def index():
     if request.method == 'POST':
         target = request.form.get('url')
         if target:
-            # Sonuçları al
-            passive_result = passive_recon(target)
-            active_result = active_recon(target)
-            
+            # Run both scans in parallel
+            start = time.time()
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+                passive_future = executor.submit(passive_recon, target)
+                active_future = executor.submit(active_recon, target)
+                
+                # Get results
+                passive_result = passive_future.result()
+                active_result = active_future.result()
+            end = time.time()
+            print(f"Time taken total was {end-start} seconds")
             # Debug için sonuçları yazdır
             print("\n=== WEB UI RESULTS ===")
             print(f"Passive endpoints: {len(passive_result.get('endpoints', []))}")

@@ -11,6 +11,8 @@ import time
 import argparse
 from pyvirtualdisplay import Display
 import shutil
+import time
+
 
 # --- Classes and Global Variables ---
 
@@ -50,13 +52,13 @@ async def main():
     # Start virtual display
     display = Display(visible=0, size=(1920, 1080))
     display.start()
-
+    time.sleep(2)
     try:
         print("[INFO] Initializing the web driver for Google Dorks")
         driver = await uc.start(headless=False,  # Changed to False since we're using virtual display
                     browser_args=['--disable-web-security'],)
 
-        await driver.wait(2)
+        await driver.wait(5)
         print("[INFO] Navigating to the New Tab Page")
         tab = await driver.get("Chrome://new-tab-page")
         print("[INFO] Waiting for elements to load")
@@ -80,7 +82,7 @@ async def main():
         await take_screenshot(tab, "newtab_search_box")
 
         print("[INFO] Pressing Enter to search")
-        await driver.wait(2)
+        await driver.wait(3)
         await tab.send(uc.cdp.input_.dispatch_key_event(
             type_="rawKeyDown", key="Enter", code="Enter", windows_virtual_key_code=13))
         await tab.send(uc.cdp.input_.dispatch_key_event(

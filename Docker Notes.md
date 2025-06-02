@@ -14,6 +14,10 @@
 | `docker-compose build --no-cache` | Cache kullanmadan build, yeni program eklendiyse kullan        |
 | `docker-compose down`             | Tüm konteynırları durdur ve sil                                |
 
+
+`sudo docker compose run --rm recon -- --no-gui --url example.com`
+No GUI modda çalıştırmak için araya "--" koymak gerekiyor
+
 ## Uyarılar
 
 Apt ile program kurmak gerekiyorsa ilgili run komutunu genişlet, yeni RUN açma.
