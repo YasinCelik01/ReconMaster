@@ -6,30 +6,15 @@
     <title>ReconMaster</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .result-section {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 20px 0;
-        }
-        pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-    </style>
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
+    <canvas id="matrix" class="matrix-bg"></canvas>
     <div class="container mt-5">
-    <div class="text-center mb-4">
-        <h1 class="display-4">🕵️ ReconMaster</h1>
-        <p class="lead text-muted">Automated reconnaissance for ethical hackers</p>
-    </div>
+        <div class="text-center mb-4">
+            <h1 class="display-4 glitch" data-text="🕵️ ReconMaster">🕵️ ReconMaster</h1>
+            <p class="lead">Advanced Reconnaissance Suite for Ethical Hackers</p>
+        </div>
         
         <div class="row justify-content-center">
             <div class="col-md-10">
@@ -300,12 +285,7 @@
             </div>
         </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function showLoading() {
-            document.getElementById('loading').style.display = 'block';
-        }
-    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html> 
