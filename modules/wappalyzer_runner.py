@@ -1,7 +1,12 @@
 import subprocess
 import os
 import time
-from modules.log_helper import setup_logger
+try:
+	# # main.py'den çalıştırıldığında
+    from modules.log_helper import setup_logger
+except ModuleNotFoundError:
+	# doğrudan modül çalıştırıldığında
+    from log_helper import setup_logger
 
 logger = setup_logger('wappalyzer_runner', 'modules/logs/wappalyzer_runner.log')
 
@@ -34,6 +39,7 @@ def run_wappalyzer(url: str):
         end = time.time()
         duration = end - start
         logger.debug(f"Wappalyzer scan completed in {duration:.2f} seconds")
+        logger.debug(f"Wappalyzer result: {result}")
         
         return result
     except Exception as e:

@@ -2,7 +2,12 @@ import subprocess
 import time
 from dotenv import load_dotenv
 import os
-from modules.log_helper import setup_logger
+try:
+	# # main.py'den çalıştırıldığında
+    from modules.log_helper import setup_logger
+except ModuleNotFoundError:
+	# doğrudan modül çalıştırıldığında
+    from log_helper import setup_logger
 
 logger = setup_logger('shosubgo', 'modules/logs/shosubgo.log')
 
@@ -33,6 +38,7 @@ def run_shosubgo(target: str, key):
         end = time.time()
         duration = end - start
         logger.debug(f"Shosubgo scan completed in {duration:.2f} seconds")
+        logger.debug(f"Shosubgo result: {output_list}")
         
         return output_list
     except Exception as e:

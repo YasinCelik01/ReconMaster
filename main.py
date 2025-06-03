@@ -19,21 +19,16 @@ from modules import nmap_scan
 from modules import waf_scan
 from modules import wappalyzer_runner
 from modules import google_dorks_scraper
+from modules.log_helper import setup_logger
 
-import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='[%(levelname)s] [%(threadName)s] %(message)s'
-)
-
+logger = setup_logger('main', 'modules/logs/main.log')
 
 app = Flask(__name__)
 
 def passive_recon(target: str):
     start = time.time()
 
-    print(f"[INFO] Starting passive reconnaissance for target: {target}")
+    logger.info(f"Starting passive reconnaissance for target: {target}")
     
     result = {
         "whois_result": None,
@@ -81,15 +76,15 @@ def passive_recon(target: str):
         result["subdomains"] = list(set(subdomains))
         result["endpoints"] = list(set(wayback_endpoints + google_dorks_results))
     
-    print("[INFO] Passive reconnaissance completed.")
+    logger.info("Passive reconnaissance completed.")
     end = time.time()
-    print(f"Time taken for passive recon was {end-start} seconds")
+    logger.info(f"Time taken for passive recon was {end-start} seconds")
     return result
 
 
 def active_recon(target: str):
     start = time.time()
-    print(f"[INFO] Starting active reconnaissance for target: {target}")
+    logger.info(f"Starting active reconnaissance for target: {target}")
     
     result = {
         "subdomains": None,
@@ -128,13 +123,11 @@ def active_recon(target: str):
         result["waf"] = waf
         result["wappalyzer"] = wappalyzer
 
-    print("[INFO] Active reconnaissance completed.")
-    print(f"[DEBUG] Total endpoints found: {len(result['endpoints'])}")
-    print(f"[DEBUG] Katana endpoints: {len(katana_endpoints)}")
-    print(f"[DEBUG] LinkFinder endpoints: {len(linfinder_results)}")
+    logger.info("Active reconnaissance completed.")
+
     
     end = time.time()
-    print(f"Time taken for the active recon was {end-start} seconds")
+    logger.info(f"Time taken for the active recon was {end-start} seconds")
     return result
 
 
@@ -154,7 +147,7 @@ def main():
 
     # Eğer no-gui modundaysa terminal çıktısı verir:
     TARGET = args.url
-    print(f"[INFO] Starting reconnaissance for target: {TARGET}")
+    logger.info(f"Starting reconnaissance for target: {TARGET}")
     
     # Run both scans in parallel
     with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
@@ -187,14 +180,14 @@ def index():
                 passive_result = passive_future.result()
                 active_result = active_future.result()
             end = time.time()
-            print(f"Time taken total was {end-start} seconds")
+            logger.info(f"Time taken total was {end-start} seconds")
             # Debug için sonuçları yazdır
-            print("\n=== WEB UI RESULTS ===")
-            print(f"Passive endpoints: {len(passive_result.get('endpoints', []))}")
-            print(f"Active endpoints: {len(active_result.get('endpoints', []))}")
-            print(f"Passive open ports: {len(passive_result.get('open_ports', []))}")
-            print(f"Active open ports: {len(active_result.get('open_ports', []))}")
-            print(f"Wappalyzer results: {active_result.get('wappalyzer')}")
+            logger.info("\n=== WEB UI RESULTS ===")
+            logger.info(f"Passive endpoints: {len(passive_result.get('endpoints', []))}")
+            logger.info(f"Active endpoints: {len(active_result.get('endpoints', []))}")
+            logger.info(f"Passive open ports: {len(passive_result.get('open_ports', []))}")
+            logger.info(f"Active open ports: {len(active_result.get('open_ports', []))}")
+            logger.info(f"Wappalyzer results: {active_result.get('wappalyzer')}")
             
             # Sonuçları düzenle
             if passive_result.get('endpoints'):

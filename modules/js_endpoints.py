@@ -5,7 +5,12 @@ import time
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 # import json  
-from modules.log_helper import setup_logger
+try:
+	# # main.py'den çalıştırıldığında
+    from modules.log_helper import setup_logger
+except ModuleNotFoundError:
+	# doğrudan modül çalıştırıldığında
+    from log_helper import setup_logger
 
 logger = setup_logger('js_endpoints', 'modules/logs/js_endpoints.log')
 
@@ -49,7 +54,7 @@ def linkfinder(url):
 		# DEMO için
 		# json_result = json.dumps(result_dict, indent=4)
 		# return json_result
-		# 
+		
 		endpoints = []
 		endpoints.extend(result_dict.keys())  # Add JS file URLs
 		endpoints.extend([item for sublist in result_dict.values() for item in sublist])  # Flattened values

@@ -1,7 +1,12 @@
 # https://medium.com/@gguzelkokar.mdbf15/from-wayback-machine-to-aws-metadata-uncovering-ssrf-in-a-production-system-within-5-minutes-2d592875c9ab
 # Wayback machine'den subdomainler, directory'ler getirir, liste olarak döndürür.
 # Büyük hedefler için yavaş, tee gibi bir komut gerek
-from modules.log_helper import setup_logger
+try:
+	# # main.py'den çalıştırıldığında
+    from modules.log_helper import setup_logger
+except ModuleNotFoundError:
+	# doğrudan modül çalıştırıldığında
+    from log_helper import setup_logger
 import time
 import requests
 
@@ -25,8 +30,8 @@ def fetch_wayback_200(target: str):
         
         end = time.time()
         duration = end - start
+        logger.debug(f"Wayback Machine found:\n{str_list}")
         logger.debug(f"Wayback Machine scan completed in {duration:.2f} seconds")
-        
         return str_list
     except Exception as e:
         logger.exception(f"[ERROR] wayback.py : {e}")

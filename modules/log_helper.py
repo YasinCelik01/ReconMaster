@@ -1,5 +1,7 @@
 import logging
 import os
+import sys
+import inspect
 
 def setup_logger(name: str, log_file: str, level=logging.DEBUG) -> logging.Logger:
     """Creates a logger for each module with separate file and console handlers."""
@@ -18,7 +20,7 @@ def setup_logger(name: str, log_file: str, level=logging.DEBUG) -> logging.Logge
     logger.propagate = False
 
     # Create log directory if it doesn't exist
-    os.makedirs(os.path.dirname(log_file), exist_ok=True)
+    os.makedirs(os.path.dirname(log_file), exist_ok=True, mode=0o777)
 
     # File handler (all details to file)
     file_handler = logging.FileHandler(log_file)
@@ -26,11 +28,15 @@ def setup_logger(name: str, log_file: str, level=logging.DEBUG) -> logging.Logge
     file_format = logging.Formatter('%(asctime)s [%(levelname)s] [%(name)s] %(message)s')
     file_handler.setFormatter(file_format)
 
-    # Console handler (only INFO, ERROR, and EXCEPTION)
+    # Console handler - show DEBUG when running directly, INFO when imported
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)  # Only show INFO and above in console
+    # Check if the module is being run directly by looking at the caller's __name__
+    caller_frame = inspect.currentframe().f_back
+    is_direct_run = caller_frame.f_globals.get('__name__') == '__main__'
+    console_level = logging.DEBUG if is_direct_run else logging.INFO
+    console_handler.setLevel(console_level)
     # Show level and message in console for better visibility
-    console_format = logging.Formatter('[%(levelname)s] %(message)s')
+    console_format = logging.Formatter('[%(name)s] [%(levelname)s] %(message)s')
     console_handler.setFormatter(console_format)
 
     # Add handlers to logger

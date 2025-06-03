@@ -4,7 +4,12 @@
 import os
 import time
 import subprocess
-from modules.log_helper import setup_logger
+try:
+	# # main.py'den çalıştırıldığında
+    from modules.log_helper import setup_logger
+except ModuleNotFoundError:
+	# doğrudan modül çalıştırıldığında
+    from log_helper import setup_logger
 
 logger = setup_logger('waf_scan', 'modules/logs/waf_scan.log')
 

@@ -1,7 +1,12 @@
 import subprocess
 import json
 import time
-from modules.log_helper import setup_logger
+try:
+	# # main.py'den çalıştırıldığında
+    from modules.log_helper import setup_logger
+except ModuleNotFoundError:
+	# doğrudan modül çalıştırıldığında
+    from log_helper import setup_logger
 
 logger = setup_logger('fetch_ip', 'modules/logs/fetch_ip.log')
 
@@ -35,6 +40,7 @@ def fetch_ip_from_url(url,dns_server="8.8.8.8"):
 	end = time.time()
 	duration = end - start
 	logger.debug(f"IP fetch completed in {duration:.2f} seconds")
+	logger.debug(f"DNS info found: {json.dumps(dns_info, default=str, indent=4)}")
 	
 	return dns_info
 

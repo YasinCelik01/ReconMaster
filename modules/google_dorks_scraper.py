@@ -12,9 +12,15 @@ import argparse
 from pyvirtualdisplay import Display
 import shutil
 import time
-from modules.log_helper import setup_logger
+try:
+	# # main.py'den çalıştırıldığında
+    from modules.log_helper import setup_logger
+    logger = setup_logger('google_dorks_scraper', 'modules/logs/google_dorks_scraper.log')
+except ModuleNotFoundError:
+	# doğrudan modül çalıştırıldığında
+    from log_helper import setup_logger
+    logger = setup_logger('google_dorks_scraper', 'logs/google_dorks_scraper.log')
 
-logger = setup_logger('google_dorks_scraper', 'modules/logs/google_dorks_scraper.log')
 
 # --- Classes and Global Variables ---
 
@@ -45,40 +51,41 @@ async def take_screenshot(tab, page_number):
 
 def cleanup_screenshots():
     """Remove all screenshots from the directory"""
+    logger.debug("Cleaning up old screenshots before running Google Scraper")
     if os.path.exists(SCREENSHOTS_DIR):
         shutil.rmtree(SCREENSHOTS_DIR)
-        os.makedirs(SCREENSHOTS_DIR)
+        os.makedirs(SCREENSHOTS_DIR, mode=0o777)
 
 # --- Main Asynchronous Routine ---
 async def main():
-    # Start virtual display
-    display = Display(visible=0, size=(1920, 1080))
-    display.start()
-    time.sleep(2)
-    try:
-        logger.info("Initializing Google Dorks scanner")
-        driver = await uc.start(headless=False,  # Changed to False since we're using virtual display
-                    browser_args=['--disable-web-security'],)
 
-        await driver.wait(5)
+    try:
+        logger.debug("Initializing Google Dorks scanner")
+        driver = await uc.start(headless=False)  # Changed to False since we're using virtual display
+
+        await driver.wait(2)
         logger.debug("Navigating to search page")
         tab = await driver.get("Chrome://new-tab-page")
-        await tab.find_all('*[src]', timeout=3)
 
-        await take_screenshot(tab, "newtab")
-        search_boxes = await tab.find_elements_by_text("Search Google or type a URL")
+        search_boxes = await tab.find_all("Search Google", timeout=3)
 
         if not search_boxes:
-            search_boxes = await tab.find_elements_by_text("Google'da arayın veya URL'yi yazın")
+            search_boxes = await tab.find_all("Google'da arayın", timeout=3)
         if not search_boxes:
             logger.error("Search box not found")
             return []
+
+        logger.debug(f"Possible search elements : {search_boxes}")
+
         search_box = search_boxes[0]
+
+        await take_screenshot(tab, 0)
+
         logger.debug(f"Searching for: {SEARCH_QUERY}")
         await search_box.click()
         await search_box.send_keys(SEARCH_QUERY)
         await search_box.click()
-        await take_screenshot(tab, "newtab_search_box")
+        await take_screenshot(tab, 1)
 
         await driver.wait(3)
         await tab.send(uc.cdp.input_.dispatch_key_event(
@@ -97,7 +104,7 @@ async def main():
             logger.debug(f"Processing page {page_number}")
             
             # Take screenshot of current page
-            await take_screenshot(tab, page_number)
+            await take_screenshot(tab, page_number+1)
             
             results = await tab.select_all("h3")
             if not results:
@@ -127,15 +134,16 @@ async def main():
 
             await next_page.click()
 
-        logger.info(f"Google Scraper Found {len(result_items)} results:")
+        logger.debug(f"Google Scraper Found {len(result_items)} results:")
         for item in result_items:
-            logger.info(f" - {item.title}: {item.url}")
+            logger.debug(f" - {item.title}: {item.url}")
         
         return result_items
 
-    finally:
-        # Clean up virtual display
-        display.stop()
+    except Exception as e:
+        logger.exception(e)
+
+
 
 
 # --- Script Entry Point ---
@@ -145,16 +153,18 @@ if __name__ == "__main__":
         description="Google search scraper for dork automation."
     )
 
+
+    cleanup_screenshots()
+
     parser.add_argument("-q", "--query", required=True, help="Search query")
     parser.add_argument("-p", "--page_limit", default="-1", help="Limit the page count in in google search.")
     args = parser.parse_args()
     SEARCH_QUERY = args.query
     PAGE_LIMIT = int(args.page_limit)
-    os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
+    os.makedirs(SCREENSHOTS_DIR, exist_ok=True, mode=0o777)
     results = uc.loop().run_until_complete(main())
     logger.debug(json.dumps([r.to_dict() for r in results], indent=2))
-    logger.debug("[INFO] Cleaning up screenshots")
-    cleanup_screenshots()
+
 
 # --- Call This From the Main File ---
 
@@ -162,11 +172,19 @@ def google_scraper(query_list, page_limit=-1):
     start = time.time()
     logger.info(f"Starting Google dorks scan for queries: {query_list}")
     
+
+    cleanup_screenshots()
+
     # Ensure screenshots directory exists
-    os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
+    os.makedirs(SCREENSHOTS_DIR, exist_ok=True, mode=0o777)
     
+
     all_urls = []
     try:
+            # Start virtual display
+        display = Display(visible=0, size=(1920, 1080))
+        display.start()
+        time.sleep(1)
         for query in query_list:
             global SEARCH_QUERY, PAGE_LIMIT
             SEARCH_QUERY = query
@@ -178,9 +196,13 @@ def google_scraper(query_list, page_limit=-1):
         end = time.time()
         duration = end - start
         logger.debug(f"Google dorks scan completed in {duration:.2f} seconds")
+        logger.debug(f"Google dorks result: {all_urls}")
         
         return all_urls
+    except Exception as e:
+       # By this way we can know about the type of error occurring
+        logger.Exception(e)
+        return []
     finally:
-        # Clean up screenshots after scraping is done
-        logger.debug("Cleaning up screenshots")
-        cleanup_screenshots()
+        # Clean up virtual display
+        display.stop()

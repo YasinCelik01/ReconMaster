@@ -17,3 +17,11 @@ Multihthread sonrası
 Pasif recon 16 saniye
 Aktif recon 53 saniye
 Toplam      53 saniye
+
+1 - wappalyzer çıktı işleme
+2 - google dork enpoinmt subdomain ayrıştırma
+3 - arayüze ekran görüntüleri
+4 - arayüze log info error'lar
+5 - result.json olacak
+
+log saatleri 3 saat geri, docker'da zaman ayarlama uğraştırıcı şimdilik atlıyoruım

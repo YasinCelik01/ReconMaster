@@ -1,7 +1,13 @@
 import subprocess
 import json
-from modules.log_helper import setup_logger
 import time
+
+try:
+	# # main.py'den çalıştırıldığında
+    from modules.log_helper import setup_logger
+except ModuleNotFoundError:
+	# doğrudan modül çalıştırıldığında
+    from log_helper import setup_logger
 
 logger = setup_logger('subfinder', 'modules/logs/subfinder.log')
 
@@ -37,7 +43,7 @@ def run_subfinder(domain):
     end = time.time()
     duration = end - start
     logger.debug(f"Subfinder found {len(subdomains)} subdomains in {duration:.2f} seconds")
-    logger.debug(f"Subdomains: {subdomains}")
+    logger.debug(f"{subdomains}")
     return subdomains
 
 if __name__ == "__main__":

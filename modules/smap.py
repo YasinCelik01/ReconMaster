@@ -1,6 +1,11 @@
 import subprocess
 import time
-from modules.log_helper import setup_logger
+try:
+	# # main.py'den çalıştırıldığında
+    from modules.log_helper import setup_logger
+except ModuleNotFoundError:
+	# doğrudan modül çalıştırıldığında
+    from log_helper import setup_logger
 
 logger = setup_logger('smap', 'modules/logs/smap.log')
 
@@ -38,6 +43,7 @@ def smap_scan(target: str):
         end = time.time()
         duration = end - start
         logger.debug(f"SMAP scan completed in {duration:.2f} seconds")
+        logger.debug(f"SMAP result: {extracted_data}")
         
         return extracted_data
     except Exception as e:

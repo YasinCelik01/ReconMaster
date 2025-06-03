@@ -2,7 +2,12 @@
 import os
 import time
 import subprocess
-from modules.log_helper import setup_logger
+try:
+	# # main.py'den çalıştırıldığında
+    from modules.log_helper import setup_logger
+except ModuleNotFoundError:
+	# doğrudan modül çalıştırıldığında
+    from log_helper import setup_logger
 
 logger = setup_logger('github_subdomains', 'modules/logs/github_subdomains.log')
 
@@ -41,6 +46,7 @@ def run_gh_subdomains(target: str, key):
         end = time.time()
         duration = end - start
         logger.debug(f"GitHub subdomains scan completed in {duration:.2f} seconds")
+        logger.debug(f"Found subdomains: {domains}")
         
         return domains
     except Exception as e:
@@ -49,4 +55,4 @@ def run_gh_subdomains(target: str, key):
     
 if __name__ == "__main__":
     result = run_gh_subdomains('balpars.com')
-    logger.info(result)
+    logger.info(f"GH Subdomains found: {result}")

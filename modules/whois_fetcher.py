@@ -3,7 +3,12 @@ import tldextract
 import json
 import time
 from urllib.parse import urlparse
-from modules.log_helper import setup_logger
+try:
+	# # main.py'den çalıştırıldığında
+    from modules.log_helper import setup_logger
+except ModuleNotFoundError:
+	# doğrudan modül çalıştırıldığında
+    from log_helper import setup_logger
 
 logger = setup_logger('whois_fetcher', 'modules/logs/whois_fetcher.log')
 
@@ -39,12 +44,12 @@ def fetch_whois_from_url(url):
 	
 	end = time.time()
 	duration = end - start
+	logger.debug(f"Result:\n{whois_info}")
 	logger.debug(f"WHOIS fetch completed in {duration:.2f} seconds")
-	
 	return(json.dumps(whois_info, default=str, indent=4))
 
 if __name__ == "__main__":
-	logger.info(whois.__file__)
+
 	url = "python.org"
 	domain = extract_domain(url)
 	logger.info(f"Extracted domain: {domain}")

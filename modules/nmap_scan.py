@@ -1,6 +1,11 @@
 import subprocess
 import time
-from modules.log_helper import setup_logger
+try:
+	# # main.py'den çalıştırıldığında
+    from modules.log_helper import setup_logger
+except ModuleNotFoundError:
+	# doğrudan modül çalıştırıldığında
+    from log_helper import setup_logger
 
 logger = setup_logger('nmap_scan', 'modules/logs/nmap_scan.log')
 
@@ -18,16 +23,7 @@ def scan_with_nmap(target):
 					target
 				]
 
-		# DEMO İÇİN TEK IP BAKILIYOR, SONRASINDA TÜM IP'LERE BAKILACAK
-		# scan_results = {}
-		# for ip in target:
-		# 	# result = subprocess.run(['nmap', '-p-','-sV',ip], capture_output=True, text=True)
-		# 	# FOR DEMO
-		# 	result = subprocess.run(['nmap', '-F',ip], capture_output=True, text=True)
-		# 	scan_results[ip] = result.stdout.strip()
-
 		output_list = []
-
 		process = subprocess.Popen(
 		NMAP_COMMAND,
 		stdout=subprocess.PIPE,
@@ -51,6 +47,7 @@ def scan_with_nmap(target):
 		
 		end = time.time()
 		duration = end - start
+		logger.debug(f"Nmap results: {extracted_data}")
 		logger.debug(f"Nmap scan completed in {duration:.2f} seconds")
 		
 		return extracted_data

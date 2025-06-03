@@ -1,7 +1,12 @@
 import subprocess
 import time
 from os import geteuid
-from modules.log_helper import setup_logger
+try:
+	# # main.py'den çalıştırıldığında
+    from modules.log_helper import setup_logger
+except ModuleNotFoundError:
+	# doğrudan modül çalıştırıldığında
+    from log_helper import setup_logger
 
 logger = setup_logger('katana', 'modules/logs/katana.log')
 
@@ -12,7 +17,8 @@ def katana_scan(target: str, rate_limit: int = 10):
         KATANA_COMMAND = [
             'katana', '-u', target,
             '-headless', '-js-crawl',
-            '-rate-limit', str(rate_limit)
+            '-rate-limit', str(rate_limit),
+            '-sc'
         ]
 
         if geteuid() == 0:
@@ -38,6 +44,7 @@ def katana_scan(target: str, rate_limit: int = 10):
         end = time.time()
         duration = end - start
         logger.debug(f"Katana scan completed in {duration:.2f} seconds")
+        logger.debug(f"Returning {len(filtered_list)} URLs: {filtered_list}")
 
         return filtered_list
 
@@ -48,4 +55,5 @@ def katana_scan(target: str, rate_limit: int = 10):
         logger.info("Katana scan ended.")
 
 if __name__ == "__main__":
-    katana_scan('balpars.com')
+    result = katana_scan('balpars.com')
+    logger.info(result)
