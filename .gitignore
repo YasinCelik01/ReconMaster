@@ -5,3 +5,4 @@ __pycache__/
 recon_db.db
 chrome_screenshots/
 logs/
+results/

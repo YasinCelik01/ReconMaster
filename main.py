@@ -3,6 +3,8 @@ import pprint
 import argparse
 import time
 import concurrent.futures
+import json
+from datetime import datetime
 from dotenv import load_dotenv
 from flask import Flask, render_template, request
 from modules import whois_fetcher
@@ -130,7 +132,39 @@ def active_recon(target: str):
     logger.info(f"Time taken for the active recon was {end-start} seconds")
     return result
 
-
+def save_results(target: str, passive_result: dict, active_result: dict):
+    """Save reconnaissance results to a JSON file."""
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    results_dir = "results"
+    
+    # Create a sanitized filename from the target
+    safe_target = target.replace("://", "_").replace("/", "_").replace(".", "_")
+    filename = f"{results_dir}/{safe_target}_{timestamp}.json"
+    
+    # Create results directory with proper permissions
+    os.makedirs(os.path.dirname(filename), exist_ok=True, mode=0o777)
+    
+    # Ensure directory has proper permissions
+    if os.path.exists(results_dir):
+        os.chmod(results_dir, 0o777)
+    
+    # Prepare the data to save
+    data = {
+        "target": target,
+        "timestamp": timestamp,
+        "passive_recon": passive_result,
+        "active_recon": active_result
+    }
+    
+    # Save to file with proper permissions
+    with open(filename, 'w') as f:
+        json.dump(data, f, indent=4)
+    
+    # Set file permissions to 777
+    os.chmod(filename, 0o777)
+    
+    logger.info(f"Results saved to {filename}")
+    return filename
 
 def main():
     parser = argparse.ArgumentParser()
@@ -145,7 +179,7 @@ def main():
         app.run(host="0.0.0.0", port=5000)
         return
 
-    # Eğer no-gui modundaysa terminal çıktısı verir:
+    # If in no-gui mode, provide terminal output:
     TARGET = args.url
     logger.info(f"Starting reconnaissance for target: {TARGET}")
     
@@ -158,12 +192,16 @@ def main():
         passive_result = passive_future.result()
         active_result = active_future.result()
 
+    # Save results
+    results_file = save_results(TARGET, passive_result, active_result)
+
     import pprint
     pp = pprint.PrettyPrinter(depth=4)
     print("\n=== PASSIVE RECON RESULTS ===")
     pp.pprint(passive_result)
     print("\n=== ACTIVE RECON RESULTS ===")
     pp.pprint(active_result)
+    print(f"\nResults saved to: {results_file}")
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -181,6 +219,10 @@ def index():
                 active_result = active_future.result()
             end = time.time()
             logger.info(f"Time taken total was {end-start} seconds")
+            
+            # Save results
+            results_file = save_results(target, passive_result, active_result)
+            
             # Debug için sonuçları yazdır
             logger.info("\n=== WEB UI RESULTS ===")
             logger.info(f"Passive endpoints: {len(passive_result.get('endpoints', []))}")
@@ -208,7 +250,8 @@ def index():
             # Sonuçları template'e gönder
             return render_template('index.html', results={
                 'passive': passive_result,
-                'active': active_result
+                'active': active_result,
+                'results_file': results_file
             })
     return render_template('index.html')
 
