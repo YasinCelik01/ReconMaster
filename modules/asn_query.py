@@ -3,11 +3,12 @@ import time
 try:
 	# # main.py'den çalıştırıldığında
     from modules.log_helper import setup_logger
+    logger = setup_logger('asn_query', 'modules/logs/asn_query.log')
 except ModuleNotFoundError:
 	# doğrudan modül çalıştırıldığında
     from log_helper import setup_logger
+    logger = setup_logger('asn_query', 'logs/asn_query.log')
 
-logger = setup_logger('asn_query', 'modules/logs/asn_query.log')
 
 def asn_to_ip(asn_number:str):
     start = time.time()

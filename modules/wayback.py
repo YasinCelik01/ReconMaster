@@ -4,13 +4,15 @@
 try:
 	# # main.py'den çalıştırıldığında
     from modules.log_helper import setup_logger
+    logger = setup_logger('wayback', 'modules/logs/wayback.log')
 except ModuleNotFoundError:
 	# doğrudan modül çalıştırıldığında
     from log_helper import setup_logger
+    logger = setup_logger('wayback', 'logs/wayback.log')
 import time
 import requests
 
-logger = setup_logger('wayback', 'modules/logs/wayback.log')
+
 
 
 # Main'den çağırılacak Fonskiyon

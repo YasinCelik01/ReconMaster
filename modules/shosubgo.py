@@ -5,11 +5,12 @@ import os
 try:
 	# # main.py'den çalıştırıldığında
     from modules.log_helper import setup_logger
+    logger = setup_logger('shosubgo', 'modules/logs/shosubgo.log')
 except ModuleNotFoundError:
 	# doğrudan modül çalıştırıldığında
     from log_helper import setup_logger
+    logger = setup_logger('shosubgo', 'logs/shosubgo.log')
 
-logger = setup_logger('shosubgo', 'modules/logs/shosubgo.log')
 
 def run_shosubgo(target: str, key):
     start = time.time()

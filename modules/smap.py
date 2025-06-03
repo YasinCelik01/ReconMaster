@@ -3,11 +3,13 @@ import time
 try:
 	# # main.py'den çalıştırıldığında
     from modules.log_helper import setup_logger
+    logger = setup_logger('smap', 'modules/logs/smap.log')
 except ModuleNotFoundError:
 	# doğrudan modül çalıştırıldığında
     from log_helper import setup_logger
+    logger = setup_logger('smap', 'logs/smap.log')
 
-logger = setup_logger('smap', 'modules/logs/smap.log')
+
 
 def smap_scan(target: str):
     start = time.time()

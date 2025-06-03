@@ -3,11 +3,12 @@ import time
 try:
 	# # main.py'den çalıştırıldığında
     from modules.log_helper import setup_logger
+    logger = setup_logger('cidr_to_ip', 'modules/logs/cidr_to_ip.log')
 except ModuleNotFoundError:
 	# doğrudan modül çalıştırıldığında
     from log_helper import setup_logger
+    logger = setup_logger('cidr_to_ip', 'logs/cidr_to_ip.log')
 
-logger = setup_logger('cidr_to_ip', 'modules/logs/cidr_to_ip.log')
 
 # CIDR formatından üretilebilecek IP adreslerinin listesini döndürür.
 # 192.168.1.0/24" -> ["192.168.1.0", "192.168.1.1", ... ,"192.168.1.255"]

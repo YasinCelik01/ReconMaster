@@ -2,12 +2,13 @@ import subprocess
 import time
 try:
 	# # main.py'den çalıştırıldığında
-    from modules.log_helper import setup_logger
+	from modules.log_helper import setup_logger
+	logger = setup_logger('nmap_scan', 'modules/logs/nmap_scan.log')
 except ModuleNotFoundError:
 	# doğrudan modül çalıştırıldığında
-    from log_helper import setup_logger
+	from log_helper import setup_logger
+	logger = setup_logger('nmap_scan', 'logs/nmap_scan.log')
 
-logger = setup_logger('nmap_scan', 'modules/logs/nmap_scan.log')
 
 def scan_with_nmap(target):
 	start = time.time()

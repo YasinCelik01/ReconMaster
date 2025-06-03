@@ -5,11 +5,13 @@ import subprocess
 try:
 	# # main.py'den çalıştırıldığında
     from modules.log_helper import setup_logger
+    logger = setup_logger('github_subdomains', 'modules/logs/github_subdomains.log')
 except ModuleNotFoundError:
 	# doğrudan modül çalıştırıldığında
     from log_helper import setup_logger
+    logger = setup_logger('github_subdomains', 'logs/github_subdomains.log')
 
-logger = setup_logger('github_subdomains', 'modules/logs/github_subdomains.log')
+
 
 
 def run_gh_subdomains(target: str, key):

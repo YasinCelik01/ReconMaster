@@ -1,12 +1,13 @@
 from urllib.parse import urlparse
+
 try:
 	# # main.py'den çalıştırıldığında
     from modules.log_helper import setup_logger
+    logger = setup_logger('url_endpoint_filter', 'modules/logs/url_endpoint_filter.log')
 except ModuleNotFoundError:
 	# doğrudan modül çalıştırıldığında
     from log_helper import setup_logger
-
-logger = setup_logger('url_endpoint_filter', 'modules/logs/url_endpoint_filter.log')
+    logger = setup_logger('url_endpoint_filter', 'logs/url_endpoint_filter.log')
 
 # main'den çağırılacak fonskiyon
 def separate_subdomains_and_endpoints(urls):

@@ -7,12 +7,13 @@ from urllib.parse import urljoin
 # import json  
 try:
 	# # main.py'den çalıştırıldığında
-    from modules.log_helper import setup_logger
+	from modules.log_helper import setup_logger
+	logger = setup_logger('js_endpoints', 'modules/logs/js_endpoints.log')
 except ModuleNotFoundError:
 	# doğrudan modül çalıştırıldığında
-    from log_helper import setup_logger
+	from log_helper import setup_logger
+	logger = setup_logger('js_endpoints', 'logs/js_endpoints.log')
 
-logger = setup_logger('js_endpoints', 'modules/logs/js_endpoints.log')
 
 #Mainden cagrılacak fonksiyon
 def linkfinder(url):

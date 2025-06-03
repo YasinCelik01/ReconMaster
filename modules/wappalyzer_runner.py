@@ -1,14 +1,16 @@
 import subprocess
 import os
+import json
 import time
 try:
 	# # main.py'den çalıştırıldığında
     from modules.log_helper import setup_logger
+    logger = setup_logger('wappalyzer_runner', 'modules/logs/wappalyzer_runner.log')
 except ModuleNotFoundError:
 	# doğrudan modül çalıştırıldığında
     from log_helper import setup_logger
+    logger = setup_logger('wappalyzer_runner', 'logs/wappalyzer_runner.log')
 
-logger = setup_logger('wappalyzer_runner', 'modules/logs/wappalyzer_runner.log')
 
 def run_wappalyzer(url: str):
     start = time.time()
@@ -32,16 +34,18 @@ def run_wappalyzer(url: str):
         if proc.returncode != 0:
             logger.exception(f"[ERROR] WappalyzerGo :\n{err}")
             return {}
+
         # JSON parse
-        import json
         result = json.loads(out)
-        
+
+
         end = time.time()
         duration = end - start
         logger.debug(f"Wappalyzer scan completed in {duration:.2f} seconds")
-        logger.debug(f"Wappalyzer result: {result}")
+        tech_names = list(result.keys())
+        logger.debug(f"Wappalyzer result: {tech_names}")
+        return tech_names
         
-        return result
     except Exception as e:
         logger.exception(f"[ERROR] WappalyzerGo exception: {e}")
         return {}

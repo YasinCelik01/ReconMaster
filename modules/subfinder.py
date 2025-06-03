@@ -5,11 +5,13 @@ import time
 try:
 	# # main.py'den çalıştırıldığında
     from modules.log_helper import setup_logger
+    logger = setup_logger('subfinder', 'modules/logs/subfinder.log')
 except ModuleNotFoundError:
 	# doğrudan modül çalıştırıldığında
     from log_helper import setup_logger
+    logger = setup_logger('subfinder', 'logs/subfinder.log')
 
-logger = setup_logger('subfinder', 'modules/logs/subfinder.log')
+
 
 def run_subfinder(domain):
     start = time.time()

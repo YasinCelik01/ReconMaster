@@ -4,11 +4,13 @@ from os import geteuid
 try:
 	# # main.py'den çalıştırıldığında
     from modules.log_helper import setup_logger
+    logger = setup_logger('katana', 'modules/logs/katana.log')
 except ModuleNotFoundError:
 	# doğrudan modül çalıştırıldığında
     from log_helper import setup_logger
+    logger = setup_logger('katana', 'logs/katana.log')
 
-logger = setup_logger('katana', 'modules/logs/katana.log')
+
 
 def katana_scan(target: str, rate_limit: int = 10):
     start = time.time()

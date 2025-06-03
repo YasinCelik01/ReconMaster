@@ -67,6 +67,8 @@ async def main():
         logger.debug("Navigating to search page")
         tab = await driver.get("Chrome://new-tab-page")
 
+        await driver.wait(5)
+
         search_boxes = await tab.find_all("Search Google", timeout=3)
 
         if not search_boxes:

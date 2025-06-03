@@ -5,12 +5,14 @@ import time
 from urllib.parse import urlparse
 try:
 	# # main.py'den çalıştırıldığında
-    from modules.log_helper import setup_logger
+	from modules.log_helper import setup_logger
+	logger = setup_logger('whois_fetcher', 'modules/logs/whois_fetcher.log')
 except ModuleNotFoundError:
 	# doğrudan modül çalıştırıldığında
-    from log_helper import setup_logger
+	from log_helper import setup_logger
+	logger = setup_logger('whois_fetcher', 'logs/whois_fetcher.log')
 
-logger = setup_logger('whois_fetcher', 'modules/logs/whois_fetcher.log')
+
 
 def extract_domain(url):
     

@@ -2,13 +2,14 @@ import subprocess
 import json
 import time
 try:
-	# # main.py'den çalıştırıldığında
-    from modules.log_helper import setup_logger
+	# main.py'den çalıştırıldığında
+	from modules.log_helper import setup_logger
+	logger = setup_logger('fetch_ip', 'modules/logs/fetch_ip.log')
 except ModuleNotFoundError:
 	# doğrudan modül çalıştırıldığında
-    from log_helper import setup_logger
+	from log_helper import setup_logger
+	logger = setup_logger('fetch_ip', 'logs/fetch_ip.log')
 
-logger = setup_logger('fetch_ip', 'modules/logs/fetch_ip.log')
 
 
 # DNS sorgusu yapan fonksiyon

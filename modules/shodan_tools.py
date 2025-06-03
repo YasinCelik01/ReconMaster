@@ -10,11 +10,12 @@ import json
 try:
 	# # main.py'den çalıştırıldığında
     from modules.log_helper import setup_logger
+    logger = setup_logger('shodan_tools', 'modules/logs/shodan_tools.log')
 except ModuleNotFoundError:
 	# doğrudan modül çalıştırıldığında
     from log_helper import setup_logger
+    logger = setup_logger('shodan_tools', 'logs/shodan_tools.log')
 
-logger = setup_logger('shodan_tools', 'modules/logs/shodan_tools.log')
 
 def get_favicon_hash(url):
     try:
