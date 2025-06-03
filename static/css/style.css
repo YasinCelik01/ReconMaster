@@ -36,6 +36,16 @@ body::before {
     opacity: 0.3;
 }
 
+#matrix-bg {
+    pointer-events: none;
+    user-select: none;
+}
+#matrix-bg text {
+    pointer-events: none;
+    user-select: none;
+}
+
+
 .container {
     position: relative;
     z-index: 1;
