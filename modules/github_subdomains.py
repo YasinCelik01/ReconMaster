@@ -20,7 +20,7 @@ def run_gh_subdomains(target: str, key):
     
     try:
         if not key:
-            logger.warning("[WARNING] No Github Token is given, skipping github-subdomains module")
+            logger.warning("No Github Token is given, skipping github-subdomains module")
             return []
 
         current_folder = os.path.abspath(os.path.dirname(__file__))
