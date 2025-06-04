@@ -22,6 +22,8 @@ from modules import waf_scan
 from modules import wappalyzer_runner
 from modules import google_dorks_scraper
 from modules.log_helper import setup_logger
+from modules import telegram_bot
+
 
 logger = setup_logger('main', 'modules/logs/main.log')
 
@@ -195,6 +197,9 @@ def main():
     # Save results
     results_file = save_results(TARGET, passive_result, active_result)
 
+    # Send Results
+    telegram_bot.run_telegram_bot(results_file)
+
     import pprint
     pp = pprint.PrettyPrinter(depth=4)
     print("\n=== PASSIVE RECON RESULTS ===")
@@ -223,6 +228,9 @@ def index():
             # Save results
             results_file = save_results(target, passive_result, active_result)
             
+            # Send Results
+            telegram_bot.run_telegram_bot(results_file)
+
             # Debug için sonuçları yazdır
             logger.info("\n=== WEB UI RESULTS ===")
             logger.info(f"Passive endpoints: {len(passive_result.get('endpoints', []))}")
@@ -253,6 +261,7 @@ def index():
                 'active': active_result,
                 'results_file': results_file
             })
+
     return render_template('index.html')
 
 if __name__ == "__main__":

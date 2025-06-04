@@ -10,6 +10,9 @@ services:
         # API Keys, .env dosyasında bulunuyor.
       - SHODAN_API_KEY=${SHODAN_API_KEY}
       - GITHUB_SEARCH_TOKEN=${GITHUB_SEARCH_TOKEN}
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - ALLOWED_USER_IDS=${ALLOWED_USER_IDS}
+      - ALLOWED_CHAT_IDS=${ALLOWED_CHAT_IDS}
       - DISPLAY=:99
     stdin_open: true  # -i equivalent
     tty: true         # -t equivalent
