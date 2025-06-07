@@ -44,8 +44,6 @@ body::before {
     background: url('../images/matrix-rain.gif') center center;
     background-size: cover;
     pointer-events: none;
-    will-change: transform;
-    transform: translateZ(0);
     backface-visibility: hidden;
 }
 
