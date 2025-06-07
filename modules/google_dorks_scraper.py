@@ -204,7 +204,6 @@ def google_scraper(query_list, page_limit=-1):
         end = time.time()
         duration = end - start
         logger.debug(f"Google dorks scan completed in {duration:.2f} seconds")
-        logger.debug(f"Google dorks result: {all_urls}")
         
         return all_urls
     except Exception as e:

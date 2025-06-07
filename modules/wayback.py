@@ -62,5 +62,4 @@ if __name__ == "__main__":
     TARGET = "balpars.com"
     result = fetch_wayback_200(TARGET)
     logger.info(f"Found {len(result)} URLs")
-    logger.debug(result)
 	

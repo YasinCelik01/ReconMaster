@@ -40,13 +40,14 @@ def katana_scan(target: str, rate_limit: int = 10):
             logger.debug(f"Katana stderr: {stderr.strip()}")
 
         output_list = stdout.splitlines()
+        # katana güncelleme yapıyorsa bununla ilgili stringler outputa karışmasın
         filtered_list = [s for s in output_list if "[launcher.Browser]" not in s]
-        logger.debug(f"Katana output {filtered_list}")
+    
 
         end = time.time()
         duration = end - start
         logger.debug(f"Katana scan completed in {duration:.2f} seconds")
-        logger.debug(f"Returning {len(filtered_list)} URLs: {filtered_list}")
+        logger.debug(f"Returning {len(filtered_list)} URLs")
 
         return filtered_list
 

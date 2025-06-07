@@ -69,6 +69,13 @@ def passive_recon(target: str, modules: list[str]):
         if 'googledorks' in modules:
             futures['googledorks'] = executor.submit(google_dorks_scraper.google_scraper, [f"site:{target}"])
 
+        while True:
+            not_done = [name for name, fut in futures.items() if not fut.done()]
+            if not not_done:
+                break
+            logger.info(f"Still Running Passive Recon Modules: {', '.join(not_done)}")
+            time.sleep(5)
+
         # Collect results
         if 'whois' in futures:
             result['whois_result'] = futures['whois'].result()
@@ -120,6 +127,15 @@ def active_recon(target: str, modules: list[str]):
             futures['wappalyzer'] = executor.submit(wappalyzer_runner.run_wappalyzer, target)
         if 'waf' in modules:
             futures['waf'] = executor.submit(waf_scan.run_wafw00f, target)
+        
+        # 2) Beş saniyede bir hâlâ bitmemiş görevleri logla
+        while True:
+            not_done = [name for name, fut in futures.items() if not fut.done()]
+            if not not_done:
+                break
+            logger.info(f"Still Running Active Recon Modules: {', '.join(not_done)}")
+            time.sleep(5)
+
 
         endpoints = []
         if 'katana' in futures:
@@ -176,26 +192,47 @@ def save_results(target: str, passive_result: dict, active_result: dict):
     return filename
 
 def run_full_recon(target: str, modules: list[str]):
-    """Pasif+aktif tarama, post-recon (HTTPX + Telegram), kaydet."""
     load_dotenv()
-    # --- Pasif ---
-    passive = passive_recon(target, modules)
-    # --- Aktif ---
-    active  = active_recon(target, modules)
-    # --- Post-Recon: HTTPX ---
-    if 'httpx' in modules and passive.get('subdomains'):
-        passive['httpx'] = httpx_runner.run_httpx(passive['subdomains'])
-    # --- Sonuç kaydet ---
+    # paralel passive + active
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        passive_future = executor.submit(passive_recon, target, modules)
+        active_future  = executor.submit(active_recon,  target, modules)
+
+        passive_result = passive_future.result()
+        active_result  = active_future.result()
+
+    # post-recon: HTTPX
+    if 'httpx' in modules and passive_result.get('subdomains'):
+        try:
+            from modules import httpx_runner
+            passive_result['httpx'] = httpx_runner.run_httpx(passive_result['subdomains'])
+        except Exception:
+            logger.exception("HTTPX scan failed")
+
+    # sonuçları kaydet
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     safe      = target.replace('://','_').replace('.','_').replace('/','_')
-    path      = f"results/{safe}_{timestamp}.json"
-    os.makedirs('results', exist_ok=True)
-    with open(path,'w') as f:
-        json.dump({'target':target,'passive':passive,'active':active}, f, indent=2)
-    # --- Telegram ---
+    path      = f"{RESULTS_DIR}/{safe}_{timestamp}.json"
+    os.makedirs(RESULTS_DIR, exist_ok=True)
+    with open(path, 'w') as f:
+        json.dump({
+            'target': target,
+            'timestamp': timestamp,
+            'passive_recon': passive_result,
+            'active_recon':  active_result
+        }, f, indent=2)
+    os.chmod(path, 0o666)
+    logger.info(f"Results saved to {path}")
+
+    # Telegram
     if 'telegram' in modules:
-        telegram_bot.run_telegram_bot(path)
-    return passive, active, path
+        try:
+            telegram_bot.run_telegram_bot(path)
+        except Exception:
+            logger.exception("Telegram notification failed")
+
+    return passive_result, active_result, path
+
 
 
 def print_results(passive_result, active_result):
