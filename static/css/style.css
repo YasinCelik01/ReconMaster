@@ -272,3 +272,9 @@ pre {
     font-family: 'Courier New', monospace;
     letter-spacing: 1px;
 }
+
+/* Results başlığındaki timestamp’ı neon mavi yapalım */
+.timestamp {
+  color: var(--neon-blue);
+  /* isterseniz farklı renk de kullanabilirsiniz, örn. neon-green: var(--neon-green); */
+}

@@ -54,7 +54,7 @@
                 <!-- Passive Recon Modules -->
                 <div class="col-md-4">
                   <fieldset class="mb-3">
-                    <legend>Passive Recon Modules</legend>
+                    <legend>Passive Modules</legend>
                     {% set passive_mods = [
                         ('whois', 'WHOIS'),
                         ('dns', 'DNS'),
@@ -82,7 +82,7 @@
                 <!-- Active Recon Modules -->
                 <div class="col-md-4">
                   <fieldset class="mb-3">
-                    <legend>Active Recon Modules</legend>
+                    <legend>Active Modules</legend>
                     {% set active_mods = [
                         ('katana', 'Katana'),
                         ('linkfinder', 'JS LinkFinder'),
@@ -107,7 +107,7 @@
                 <!-- Post-Recon Modules -->
                 <div class="col-md-4">
                   <fieldset class="mb-3">
-                    <legend>Post-Recon Modules</legend>
+                    <legend>Post-Scan Modules</legend>
                     <div class="form-check">
                       <input class="form-check-input"
                              type="checkbox"
@@ -148,7 +148,10 @@
 
         {% if results %}
         <div class="result-section">
-          <h3>Results for {{ header_timestamp }}</h3>
+          <h3>
+            Results for 
+            <span class="timestamp">{{ header_timestamp }}</span>
+          </h3>
 
           <div class="row">
             <!-- Passive Results -->
