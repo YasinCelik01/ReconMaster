@@ -187,7 +187,40 @@
                   <div id="dnsCollapse" class="accordion-collapse collapse"
                        data-bs-parent="#passiveAccordion">
                     <div class="accordion-body">
-                      <pre>{{ results.passive.dns_info }}</pre>
+                      <div class="table-responsive">
+                        <table class="table table-striped">
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>Type</th>
+                              <th>Source/Domain</th>
+                              <th>Target/IP</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for record in results.passive.dns_info.records %}
+                            <tr>
+                              <td>{{ loop.index }}</td>
+                              <td>{{ record.type }}</td>
+                              <td>
+                                {% if record.type == 'CNAME' %}
+                                  {{ record.source }}
+                                {% else %}
+                                  {{ record.domain }}
+                                {% endif %}
+                              </td>
+                              <td>
+                                {% if record.type == 'CNAME' %}
+                                  {{ record.target }}
+                                {% else %}
+                                  {{ record.ip }}
+                                {% endif %}
+                              </td>
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </div>
                 </div>
