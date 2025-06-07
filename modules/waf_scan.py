@@ -46,15 +46,18 @@ def run_wafw00f(target: str):
 
         output_lines = stdout.splitlines()
         
-        # Örnek: [+] The site https://balpars.com is behind Fastly (Fastly CDN) WAF
-        waf = output_lines[-2].split("behind")[1].removesuffix('.')
+        waf = "Unknown"
+
+        if "behind" in output_lines:
+            # Örnek: [+] The site https://balpars.com is behind Fastly (Fastly CDN) WAF
+            waf = output_lines[-2].split("behind")[1].removesuffix('.')
         
+
         end = time.time()
         duration = end - start
         logger.debug(f"WAF scan completed in {duration:.2f} seconds")
         logger.debug(f"WAF {waf}")
-        logger.debug(f"===")
-        logger.debug(strip_ansi(waf))
+        logger.info(f"Waf scan completed: {strip_ansi(waf)}")
         return strip_ansi(waf)
     except Exception as e:
         logger.exception(f"[ERROR] waf_scan.py : {e}")

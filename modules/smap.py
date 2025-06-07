@@ -11,7 +11,7 @@ except ModuleNotFoundError:
 
 
 
-def smap_scan(target: str):
+def smap_scan(target: str)->list:
     start = time.time()
     logger.info(f"Starting SMAP scan for {target}")
     

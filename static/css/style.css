@@ -1,11 +1,18 @@
 :root {
+    /* Core theme colors */
     --neon-green: #39ff14;
     --neon-blue: #00ffff;
     --dark-bg: #0a0a0a;
     --darker-bg: #050505;
     --terminal-bg: #1a1a1a;
+
+    /* Matrix rain colors */
+    --matrix-green: #0f0;
+    --matrix-green-checkbox: rgba(0, 255, 0, 0.507);
+    --matrix-green-glow: rgba(0, 255, 0, 0.4);
 }
 
+/* Base page styles */
 body {
     background-color: var(--dark-bg);
     color: #fff;
@@ -41,17 +48,18 @@ body::before {
     z-index: 1;
 }
 
-.card {
+/* Card styling */
+.card, .card-body {
     background-color: var(--darker-bg);
+}
+
+.card {
     border: 1px solid var(--neon-green);
     box-shadow: 0 0 10px var(--neon-green);
     border-radius: 5px;
 }
 
-.card-body {
-    background-color: var(--darker-bg);
-}
-
+/* Form controls */
 .form-control {
     background-color: var(--terminal-bg);
     border: 1px solid var(--neon-blue);
@@ -73,6 +81,41 @@ body::before {
     letter-spacing: 2px;
 }
 
+/* Fieldset legends */
+fieldset legend {
+    color: var(--neon-blue);
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+
+.col-md-4 > fieldset legend {
+    text-shadow: 0 0 2px var(--neon-blue);
+}
+
+/* Checkbox styling */
+.form-check-input {
+    width: 1.2em;
+    height: 1.2em;
+    margin-top: 0.25rem;
+    background-color: transparent;
+    border: 2px solid var(--matrix-green);
+    transition: all 0.2s ease-in-out;
+}
+
+.form-check-input:checked {
+    background-color: var(--matrix-green-checkbox);
+    border-color: var(--matrix-green);
+    box-shadow: 0 0 8px var(--matrix-green-glow);
+}
+
+.form-check-label {
+    color: var(--matrix-green);
+    margin-left: 0.5rem;
+}
+
+/* Primary button */
 .btn-primary {
     background-color: transparent;
     border: 2px solid var(--neon-green);
@@ -106,6 +149,7 @@ body::before {
     left: 100%;
 }
 
+/* Results section */
 .result-section {
     background-color: var(--terminal-bg);
     border: 1px solid var(--neon-blue);
@@ -115,6 +159,7 @@ body::before {
     box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
 }
 
+/* Accordion */
 .accordion {
     --bs-accordion-bg: var(--terminal-bg);
     --bs-accordion-border-color: var(--neon-blue);
@@ -133,6 +178,7 @@ body::before {
     filter: invert(1);
 }
 
+/* Tables */
 .table {
     color: var(--neon-green);
     border-color: var(--neon-blue);
@@ -142,6 +188,7 @@ body::before {
     background-color: rgba(0, 255, 255, 0.05);
 }
 
+/* Preformatted blocks */
 pre {
     background-color: var(--darker-bg);
     color: var(--neon-green);
@@ -152,6 +199,7 @@ pre {
     word-wrap: break-word;
 }
 
+/* Loading spinner */
 .loading {
     display: none;
     text-align: center;
@@ -163,6 +211,7 @@ pre {
     color: var(--neon-green) !important;
 }
 
+/* Glitch text effect */
 .glitch {
     position: relative;
     color: var(--neon-green);
@@ -209,6 +258,7 @@ pre {
     100% { clip-path: inset(25% 0 25% 0); }
 }
 
+/* Header text */
 .display-4 {
     font-family: 'Courier New', monospace;
     font-weight: bold;
@@ -216,8 +266,9 @@ pre {
     letter-spacing: 3px;
 }
 
+/* Subheading */
 .lead {
     color: var(--neon-blue);
     font-family: 'Courier New', monospace;
     letter-spacing: 1px;
-} 
+}
