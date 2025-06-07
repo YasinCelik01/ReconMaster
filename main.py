@@ -235,34 +235,71 @@ def main():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    # --- 1. önce mevcut sonuç dosyalarını oku ---
-    files = sorted(
-        [f for f in os.listdir(RESULTS_DIR) if f.endswith('.json')],
-        reverse=True
-    )
+    # --- Dosya listesi için header_timestamp'i önce boş atıyoruz ---
+    header_timestamp = ''
 
-    # --- 2. POST: yeni scan isteği gelirse ---
+    # 1) results klasöründeki JSON dosyalarını oku ve display metni hazırla
+    files = []
+    for fname in os.listdir(RESULTS_DIR):
+        if not fname.endswith('.json'):
+            continue
+
+        parts = fname.rsplit('_', 2)
+        if len(parts) == 3:
+            base, date_str, time_str = parts
+            time_str = time_str.replace('.json', '')
+            try:
+                dt = datetime.strptime(f"{date_str}_{time_str}", "%Y%m%d_%H%M%S")
+                display = f"{base} {dt.strftime('%H:%M %d/%m/%Y')}"
+            except ValueError:
+                dt = None
+                display = fname
+        else:
+            dt = None
+            display = fname
+
+        files.append({
+            'name':    fname,
+            'display': display,
+            'dt':       dt or datetime.min
+        })
+
+    # 2) Tarih/saat bilgisini de dikkate alarak en yeni en önde sıralama
+    files.sort(key=lambda x: x['dt'], reverse=True)
+
+    # 3) POST: yeni scan tetikleme
     if request.method == 'POST':
         target  = request.form['url']
         modules = request.form.getlist('modules')
         passive, active, results_file = run_full_recon(target, modules)
-        # POST sonrası GET'e yönlendir (PRG pattern)
         return redirect(url_for('index', results_file=os.path.basename(results_file)))
 
-    # --- 3. GET: eğer ?results_file=... varsa dosyayı oku ---
-    results = None
+    # 4) GET: ?results_file parametresi varsa JSON'u oku ve header_timestamp ayarla
     sel = request.args.get('results_file')
-    if sel and sel in files:
-        with open(os.path.join(RESULTS_DIR, sel), 'r') as f:
-            data = json.load(f)
+    results = None
+    if sel:
+        # Dropdown'dan seçilen dosyanın display metnini bul
+        for f in files:
+            if f['name'] == sel:
+                header_timestamp = f['display']
+                break
+
+        # JSON'u yükle
+        with open(os.path.join(RESULTS_DIR, sel), 'r') as jf:
+            data = json.load(jf)
         results = {
             'passive': data.get('passive_recon') or data.get('passive'),
             'active':  data.get('active_recon')  or data.get('active')
         }
 
-    return render_template('index.html',
-                           files=files,
-                           results=results)
+    # 5) Şablonu render et
+    return render_template(
+        'index.html',
+        files=files,
+        results=results,
+        header_timestamp=header_timestamp
+    )
+
 
 if __name__=='__main__':
     main()

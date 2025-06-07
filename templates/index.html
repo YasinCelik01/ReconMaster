@@ -38,11 +38,11 @@
                     <!-- Bootstrap otomatik caret ekliyor, ekstra içerik yok -->
                     </button>
                   <ul class="dropdown-menu dropdown-menu-end">
-                    {% for fname in files %}
+                    {% for f in files %}
                     <li>
                       <a class="dropdown-item"
-                         href="{{ url_for('index', results_file=fname) }}">
-                        {{ fname }}
+                        href="{{ url_for('index', results_file=f.name) }}">
+                        {{ f.display }}
                       </a>
                     </li>
                     {% endfor %}
@@ -148,7 +148,8 @@
 
         {% if results %}
         <div class="result-section">
-          <h3>Results for {{ request.args.get('results_file') }}</h3>
+          <h3>Results for {{ header_timestamp }}</h3>
+
           <div class="row">
             <!-- Passive Results -->
             <div class="col-md-6">
