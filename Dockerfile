@@ -53,8 +53,19 @@ ENV DISPLAY=:99
 
 COPY . .
 
-# Start Xvfb and run the application
-ENTRYPOINT ["sh", "-c", "Xvfb :99 -screen 0 1920x1080x24 & python -u main.py $*"]
-
+# 8) Tek satır ENTRYPOINT ile:
+#    - IP’den timezone al
+#    - /etc/localtime ve /etc/timezone güncelle
+#    - Xvfb’yi başlat, google dork için
+#    - Uygulamayı çalıştır
+ENTRYPOINT ["sh","-c", "\
+  TZ=$(curl -sf https://ipapi.co/timezone || echo 'Europe/Istanbul') && \
+  echo \"Setting timezone to $TZ\" && \
+  ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+  echo \"$TZ\" > /etc/timezone && \
+  dpkg-reconfigure -f noninteractive tzdata >/dev/null 2>&1 && \
+  Xvfb :99 -screen 0 1920x1080x24 & \
+  exec python -u main.py \"$@\" \
+"]
 # Web arayüzü için port açıklığı
 EXPOSE 5000
