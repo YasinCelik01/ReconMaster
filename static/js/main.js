@@ -1,3 +1,8 @@
+// Loading göstergesi için fonksiyon
+function showLoading() {
+    document.getElementById('loading').style.display = 'block';
+}
+
 // Matrix rain effect
 const canvas = document.getElementById('matrix');
 const ctx = canvas.getContext('2d');

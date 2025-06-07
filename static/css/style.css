@@ -40,7 +40,13 @@ body::before {
     width: 100%;
     height: 100%;
     z-index: -2;
-    opacity: 0.3;
+    opacity: 0.15;
+    background: url('../images/matrix-rain.gif') center center;
+    background-size: cover;
+    pointer-events: none;
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 .container {
@@ -273,7 +279,7 @@ pre {
     letter-spacing: 1px;
 }
 
-/* Results başlığındaki timestamp’ı neon mavi yapalım */
+/* Results başlığındaki timestamp'ı neon mavi yapalım */
 .timestamp {
   color: var(--neon-blue);
   /* isterseniz farklı renk de kullanabilirsiniz, örn. neon-green: var(--neon-green); */
