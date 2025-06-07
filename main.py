@@ -6,28 +6,39 @@ import concurrent.futures
 import json
 from datetime import datetime
 from dotenv import load_dotenv
-from flask import Flask, render_template, request
-from modules import whois_fetcher
-from modules import fetch_ip
-from modules import subfinder
-from modules import shosubgo
-from modules import github_subdomains
-from modules import wayback
-from modules.url_endpoint_filter import separate_subdomains_and_endpoints
-from modules import smap
-from modules import katana
-from modules import js_endpoints
-from modules import nmap_scan
-from modules import waf_scan
-from modules import wappalyzer_runner
-from modules import google_dorks_scraper
-from modules.log_helper import setup_logger
-from modules import telegram_bot
+from flask import Flask, render_template, request, redirect, url_for
+from modules import (whois_fetcher, fetch_ip, subfinder, shosubgo,
+                     github_subdomains, wayback, smap, katana,
+                     js_endpoints, nmap_scan, waf_scan,
+                     wappalyzer_runner, google_dorks_scraper,
+                     telegram_bot, url_endpoint_filter, log_helper)
 
 
-logger = setup_logger('main', 'modules/logs/main.log')
+logger = log_helper.setup_logger('main', 'modules/logs/main.log')
 
 app = Flask(__name__)
+
+# Tüm modüller ve label’ları
+# Bu listeyi terminal modunda modül devre dışı bırakmak için kullanıyoruz
+ALL_MODULES = [
+    ('whois',       'WHOIS'),
+    ('dns',         'DNS'),
+    ('subfinder',   'Subfinder'),
+    ('shosubgo',    'ShosubGo'),
+    ('github',      'GitHub Subdomains'),
+    ('wayback',     'Wayback'),
+    ('smap',        'Shodan Port Scan'),
+    ('googledorks','Google Dorks'),
+    ('katana',      'Katana'),
+    ('linkfinder',  'JS LinkFinder'),
+    ('nmap',        'Nmap'),
+    ('wappalyzer',  'Wappalyzer'),
+    ('waf',         'WAFW00f'),
+    ('httpx',       'HTTPX Scan'),
+    ('telegram',    'Telegram Notification'),
+]
+RESULTS_DIR = 'results'
+
 
 def passive_recon(target: str, modules: list[str]):
     start = time.time()
@@ -73,12 +84,12 @@ def passive_recon(target: str, modules: list[str]):
         endpoints = []
         if 'wayback' in futures:
             wb = futures['wayback'].result()
-            wb_sub, wb_end = separate_subdomains_and_endpoints(wb)
+            wb_sub, wb_end = url_endpoint_filter.separate_subdomains_and_endpoints(wb)
             subdomains.extend(wb_sub)
             endpoints.extend(wb_end)
         if 'googledorks' in futures:
             gd = futures['googledorks'].result()
-            gd_sub, gd_end = separate_subdomains_and_endpoints(gd)
+            gd_sub, gd_end = url_endpoint_filter.separate_subdomains_and_endpoints(gd)
             subdomains.extend(gd_sub)
             endpoints.extend(gd_end)
         if 'smap' in futures:
@@ -112,7 +123,7 @@ def active_recon(target: str, modules: list[str]):
 
         endpoints = []
         if 'katana' in futures:
-            ks, ke = separate_subdomains_and_endpoints(futures['katana'].result())
+            ks, ke = url_endpoint_filter.separate_subdomains_and_endpoints(futures['katana'].result())
             result['subdomains'] = ks
             endpoints.extend(ke)
         if 'linkfinder' in futures:
@@ -164,39 +175,27 @@ def save_results(target: str, passive_result: dict, active_result: dict):
     logger.info(f"Results saved to {filename}")
     return filename
 
-def run_full_recon(target: str):
-    """Run passive + active recon and return results + results file path"""
-    logger.info(f"Starting full reconnaissance for target: {target}")
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-        passive_future = executor.submit(passive_recon, target)
-        active_future = executor.submit(active_recon, target)
-
-        # Get passive result first
-        passive_result = passive_future.result()
-        subdomains = passive_result.get("subdomains", [])
-
-        # Run HTTPX after passive recon
-        if subdomains:
-            httpx_future = executor.submit(httpx_runner.run_httpx, subdomains)
-            httpx_result = httpx_future.result()
-        else:
-            logger.warning("No subdomains found from passive recon. Skipping HTTPX.")
-            httpx_result = None
-
-        # Attach HTTPX to passive result (optional)
-        passive_result["httpx"] = httpx_result
-
-        # Wait for active
-        active_result = active_future.result()
-
-    # Save results to file
-    results_file = save_results(target, passive_result, active_result)
-
-    # Send results via Telegram
-    # telegram_bot.run_telegram_bot(results_file)
-
-    return passive_result, active_result, results_file
+def run_full_recon(target: str, modules: list[str]):
+    """Pasif+aktif tarama, post-recon (HTTPX + Telegram), kaydet."""
+    load_dotenv()
+    # --- Pasif ---
+    passive = passive_recon(target, modules)
+    # --- Aktif ---
+    active  = active_recon(target, modules)
+    # --- Post-Recon: HTTPX ---
+    if 'httpx' in modules and passive.get('subdomains'):
+        passive['httpx'] = httpx_runner.run_httpx(passive['subdomains'])
+    # --- Sonuç kaydet ---
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    safe      = target.replace('://','_').replace('.','_').replace('/','_')
+    path      = f"results/{safe}_{timestamp}.json"
+    os.makedirs('results', exist_ok=True)
+    with open(path,'w') as f:
+        json.dump({'target':target,'passive':passive,'active':active}, f, indent=2)
+    # --- Telegram ---
+    if 'telegram' in modules:
+        telegram_bot.run_telegram_bot(path)
+    return passive, active, path
 
 
 def print_results(passive_result, active_result):
@@ -208,41 +207,62 @@ def print_results(passive_result, active_result):
     logger.info(f"Wappalyzer results: {active_result.get('wappalyzer')}")
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--url", help="Target URL or domain (required in no-gui mode)")
-    parser.add_argument("--no-gui", action="store_true", help="Disable Flask GUI")
-    args = parser.parse_args()
+    p = argparse.ArgumentParser()
+    p.add_argument('--url',    help='Target URL/domain')
+    p.add_argument('--no-gui', action='store_true', help='Terminal mode')
+    args = p.parse_args()
 
-    if args.no_gui and not args.url:
-        parser.error("--url is required when running in no-gui mode")
+    # --- Terminal Mode ---
+    if args.no_gui:
+        target = args.url or input("Target URL/domain: ").strip()
+        # Modülleri listele, disable için numara al
+        print("Modüller (devre dışı bırakmak için numarayı yazın, virgülle ayırın):")
+        for i,(key,label) in enumerate(ALL_MODULES,1):
+            print(f"{i:2d}. {label}")
+        disabled = input(">> ").split(',')
+        disabled = {int(x) for x in disabled if x.isdigit() and 1<=int(x)<=len(ALL_MODULES)}
+        selected = [k for i,(k,_) in enumerate(ALL_MODULES,1) if i not in disabled]
 
-    if not args.no_gui:
-        app.run(host="0.0.0.0", port=5000)
+        passive, active, file = run_full_recon(target, selected)
+        print(f"\nSonuç kaydedildi: {file}")
+        print(f"Passive subdomains: {len(passive.get('subdomains',[]))}")
+        print(f"Active open ports: {len(active.get('open_ports',[]))}")
         return
 
-    # If in no-gui mode, provide terminal output:
-    TARGET = args.url
-    logger.info(f"Starting reconnaissance for target: {TARGET}")
-    
-    passive_result, active_result, results_file = run_full_recon(TARGET)
-
-    # Debug için sonuçları yazdır
-    print_results(passive_result, active_result)
+    # --- GUI Mode ---
+    app.run(host='0.0.0.0', port=5000)
 
 
-# In your Flask route:
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    # --- 1. önce mevcut sonuç dosyalarını oku ---
+    files = sorted(
+        [f for f in os.listdir(RESULTS_DIR) if f.endswith('.json')],
+        reverse=True
+    )
+
+    # --- 2. POST: yeni scan isteği gelirse ---
     if request.method == 'POST':
-        target = request.form.get('url')
-        # Get list of selected modules
-        selected = request.form.getlist('modules')
-        # Run recon with only selected modules
-        passive = passive_recon(target, selected)
-        active = active_recon(target, selected)
-        return render_template('index.html', results={'passive': passive, 'active': active})
-    return render_template('index.html')
+        target  = request.form['url']
+        modules = request.form.getlist('modules')
+        passive, active, results_file = run_full_recon(target, modules)
+        # POST sonrası GET'e yönlendir (PRG pattern)
+        return redirect(url_for('index', results_file=os.path.basename(results_file)))
 
+    # --- 3. GET: eğer ?results_file=... varsa dosyayı oku ---
+    results = None
+    sel = request.args.get('results_file')
+    if sel and sel in files:
+        with open(os.path.join(RESULTS_DIR, sel), 'r') as f:
+            data = json.load(f)
+        results = {
+            'passive': data.get('passive_recon') or data.get('passive'),
+            'active':  data.get('active_recon')  or data.get('active')
+        }
 
-if __name__ == "__main__":
+    return render_template('index.html',
+                           files=files,
+                           results=results)
+
+if __name__=='__main__':
     main()
