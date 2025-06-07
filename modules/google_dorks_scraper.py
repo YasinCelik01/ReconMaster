@@ -179,12 +179,16 @@ def google_scraper(query_list, page_limit=-1):
     logger.info(f"Starting Google dorks scan for queries: {query_list}")
     
     cleanup_screenshots()
-
     # Ensure screenshots directory exists
     os.makedirs(SCREENSHOTS_DIR, exist_ok=True, mode=0o777)
     
     all_urls = []
     try:
+
+        for lock in ("/tmp/.X0-lock", "/tmp/.X99-lock", "/tmp/.X11-unix/X0", "/tmp/.X11-unix/X99"):
+            try: os.remove(lock)
+            except: pass
+
         # Start virtual display
         display = Display(visible=0, size=(1920, 1080))
         display.start()

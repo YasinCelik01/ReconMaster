@@ -59,13 +59,11 @@ COPY . .
 #    - Xvfb’yi başlat, google dork için
 #    - Uygulamayı çalıştır
 ENTRYPOINT ["sh","-c", "\
-  TZ=$(curl -sf https://ipapi.co/timezone || echo 'Europe/Istanbul') && \
-  echo \"Setting timezone to $TZ\" && \
-  ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
-  echo \"$TZ\" > /etc/timezone && \
-  dpkg-reconfigure -f noninteractive tzdata >/dev/null 2>&1 && \
-  Xvfb :99 -screen 0 1920x1080x24 & \
-  exec python -u main.py \"$@\" \
+   TZ=$(curl -sf --connect-timeout 3 -m 5 https://ipapi.co/timezone || echo 'Europe/Istanbul')  && \
+   ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+   echo \"$TZ\" > /etc/timezone && \
+   dpkg-reconfigure -f noninteractive tzdata >/dev/null 2>&1 && \
+   exec python -u main.py \"$@\" \
 "]
 # Web arayüzü için port açıklığı
 EXPOSE 5000

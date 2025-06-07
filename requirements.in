@@ -1,0 +1,12 @@
+mmh3
+requests
+shodan
+beautifulsoup4
+python-dotenv
+python-whois
+wafw00f
+flask==3.0.2
+flask-wtf==1.2.1
+nodriver
+pyvirtualdisplay
+python-telegram-bot
