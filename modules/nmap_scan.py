@@ -1,5 +1,7 @@
 import subprocess
 import time
+import re
+
 try:
 	# # main.py'den çalıştırıldığında
 	from modules.log_helper import setup_logger
@@ -16,7 +18,9 @@ def scan_with_nmap(target):
 	
 	try:
 		if not target:
-			return {"error": "No IP addresses provided for scanning"}
+			logger.error("No target is provided")
+			return []
+
 
 		NMAP_COMMAND = [
 					'nmap',
@@ -26,25 +30,35 @@ def scan_with_nmap(target):
 
 		output_list = []
 		process = subprocess.Popen(
-		NMAP_COMMAND,
-		stdout=subprocess.PIPE,
-		text=True
+			NMAP_COMMAND,
+			stdout=subprocess.PIPE,
+			text=True
 		)
 
 		stdout, stderr = process.communicate()
 		output_list = stdout.splitlines()
 	 
 		extracted_data = []
-		for line in output_list:
-			if any(proto in line for proto in ['tcp', 'udp']):  # Check if the line contains protocol info
+		# for line in output_list:
+		# 	if any(proto in line for proto in ['tcp', 'udp']):  # Check if the line contains protocol info
 
-				parts = line.split()  # Split the line by whitespace
-				if len(parts) >= 3:
-					port_protocol = parts[0]  # First item (e.g., "80/tcp")
-				# state = parts[1] # Open durumu
-					service = parts[2]        # Third item (e.g., "http")
-					version = " ".join(parts[3:]) if len(parts) > 3 else "N/A"  # Kalanlar versiyon bilgisi
-					extracted_data.append(f"{port_protocol} {service} {version.strip()}")
+		# 		parts = line.split()  # Split the line by whitespace
+		# 		if len(parts) >= 3:
+		# 			port_protocol = parts[0]  # First item (e.g., "80/tcp")
+		# 		# state = parts[1] # Open durumu
+		# 			service = parts[2]        # Third item (e.g., "http")
+		# 			version = " ".join(parts[3:]) if len(parts) > 3 else "N/A"  # Kalanlar versiyon bilgisi
+		# 			extracted_data.append(f"{port_protocol} {service} {version.strip()}")
+		
+		PORT_LINE = re.compile(r"^(\d+/(?:tcp|udp))\s+(\w+)\s+(.+)")
+		for line in output_list:
+			m = PORT_LINE.match(line)
+			if m:
+				port_proto, state, rest = m.groups()
+				# rest = "service [version]" → istersen tekrar split
+				extracted_data.append(f"{port_proto} {rest}")
+
+
 		
 		end = time.time()
 		duration = end - start

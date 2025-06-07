@@ -54,9 +54,8 @@ ENV DISPLAY=:99
 COPY . .
 
 # 8) Tek satır ENTRYPOINT ile:
-#    - IP’den timezone al
+#    - IP’den timezone al 5 saniyede alamazsa istanbul
 #    - /etc/localtime ve /etc/timezone güncelle
-#    - Xvfb’yi başlat, google dork için
 #    - Uygulamayı çalıştır
 ENTRYPOINT ["sh","-c", "\
    TZ=$(curl -sf --connect-timeout 3 -m 5 https://ipapi.co/timezone || echo 'Europe/Istanbul')  && \

@@ -13,9 +13,5 @@ services:
       - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
       - ALLOWED_USER_IDS=${ALLOWED_USER_IDS}
       - ALLOWED_CHAT_IDS=${ALLOWED_CHAT_IDS}
-      - DISPLAY=:99
     stdin_open: true  # -i equivalent
     tty: true         # -t equivalent
-    privileged: true  # Required for Xvfb
-    shm_size: '2gb'   # Increase shared memory for Chrome
-

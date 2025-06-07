@@ -1,68 +1,62 @@
-# Wafw00f WAF tespit
-# Domain alır, wafı döndürür
-import re
-import os
-import time
-import subprocess
+import subprocess, time, re, os
 try:
-	# # main.py'den çalıştırıldığında
     from modules.log_helper import setup_logger
-    logger = setup_logger('waf_scan', 'modules/logs/waf_scan.log')
+    logger = setup_logger('waf_scan','modules/logs/waf_scan.log')
 except ModuleNotFoundError:
-	# doğrudan modül çalıştırıldığında
     from log_helper import setup_logger
-    logger = setup_logger('waf_scan', 'logs/waf_scan.log')
+    logger = setup_logger('waf_scan','logs/waf_scan.log')
 
 
-def strip_ansi(o: str) -> str:    
-    # pattern = re.compile(r'/(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]/')
-    pattern = re.compile(r'\x1B\[\d+(;\d+){0,2}m')
-    stripped = pattern.sub('', o)
-    return stripped
+# ANSI escape kodlarını temizleyen regex
+ANSI_RE = re.compile(r'\x1B\[\d+(?:;\d+)*m')
+
+# "[+] The site ... is behind Fastly (Fastly CDN) WAF." satırından
+# "Fastly (Fastly CDN)" kısmını çekecek regex
+BEHIND_RE = re.compile(r'\[\+\]\s+The site .+ is behind (.+?) WAF\.')
+
+def strip_ansi(line: str) -> str:
+    return ANSI_RE.sub('', line)
 
 
-def run_wafw00f(target: str):
+def run_wafw00f(target: str, timeout: float = 30.0) -> str:
     start = time.time()
     logger.info(f"Starting WAF scan for {target}")
-    
+
+    cmd = ['wafw00f', target]
     try:
-        current_folder = os.path.abspath(os.path.dirname(__file__))
-
-        COMMAND = [
-            'wafw00f', target
-        ]
-    
-        process = subprocess.Popen(
-            COMMAND,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+        # subprocess.run ile hem stderr'i yakalayalım, hem timeout kullanalım
+        res = subprocess.run(
+            cmd,
+            capture_output=True,
             text=True,
-            cwd=current_folder
+            check=True,
+            timeout=timeout
         )
-        
-        stdout, stderr = process.communicate()
-        if stderr:
-            logger.warning(f"wafw00f stderr: {stderr}")
+    except subprocess.TimeoutExpired:
+        logger.error(f"WAF scan timed out after {timeout}s for {target}")
+        return "Unknown"
+    except subprocess.CalledProcessError as e:
+        err = (e.stderr or '').strip()
+        logger.error(f"WAF scan failed (code {e.returncode}): {err}")
+        return "Unknown"
 
-        output_lines = stdout.splitlines()
-        
-        waf = "Unknown"
+    # stdout satırlarını alın, ANSI kodlarını temizleyin
+    lines = [strip_ansi(l) for l in res.stdout.splitlines()]
+    logger.debug("wafw00f output (cleaned):\n" + "\n".join(lines))
 
-        if "behind" in output_lines:
-            # Örnek: [+] The site https://balpars.com is behind Fastly (Fastly CDN) WAF
-            waf = output_lines[-2].split("behind")[1].removesuffix('.')
-        
+    waf = "Unknown"
+    # regex ile "[+] ... is behind XXX WAF." satırını yakala
+    for line in lines:
+        m = BEHIND_RE.match(line)
+        if m:
+            waf = m.group(1)
+            break
 
-        end = time.time()
-        duration = end - start
-        logger.debug(f"WAF scan completed in {duration:.2f} seconds")
-        logger.debug(f"WAF {waf}")
-        logger.info(f"Waf scan completed: {strip_ansi(waf)}")
-        return strip_ansi(waf)
-    except Exception as e:
-        logger.exception(f"[ERROR] waf_scan.py : {e}")
-        return "Unknown WAF"
+    duration = time.time() - start
+    logger.debug(f"WAF scan completed in {duration:.2f} seconds, detected: {waf!r}")
+    logger.info(f"WAF scan result: {waf}")
+    return waf
 
-if __name__ == "__main__":
-    result = run_wafw00f('balpars.com')
-    logger.info(result)
+
+if __name__ == '__main__':
+    print(run_wafw00f('https://balpars.com'))
