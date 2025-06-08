@@ -1,153 +1,256 @@
 /* ─────────── THEME ROOT ─────────── */
-:root{
-  --neon-green:#39ff14;
-  --neon-blue :#00ffff;
-  --dark-bg   :#0a0a0a;
-  --darker-bg :#050505;
-  --terminal-bg:#1a1a1a;
-  --matrix-green:#0f0;
-  --matrix-green-checkbox:rgba(0,255,0,.50);
-  --matrix-green-glow    :rgba(0,255,0,.40);
+:root {
+  --neon-green: #39ff14;
+  --neon-blue: #00ffff;
+  --dark-bg: #0a0a0a;
+  --darker-bg: #050505;
+  --terminal-bg: #1a1a1a;
+  --matrix-green: #0f0;
+  --matrix-green-checkbox: rgba(0,255,0,.50);
+  --matrix-green-glow: rgba(0,255,0,.40);
 }
 
 /* ─────────── BASE PAGE ─────────── */
-body{
-  background:var(--dark-bg);
-  color:#fff;
-  font-family:"Courier New",monospace;
-  overflow-x:hidden;
+body {
+  background: var(--dark-bg);
+  color: #fff;
+  font-family: "Courier New", monospace;
+  overflow-x: hidden;
 }
-body::before{               /* hafif neon çizgi efekti */
-  content:"";position:fixed;inset:0;z-index:-1;
-  background:linear-gradient(180deg,rgba(0,255,0,.03) 0%,transparent 100%);
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(0,255,0,.03) 0%, transparent 100%);
 }
-.matrix-bg{
-  position:fixed;inset:0;z-index:-2;
-  background:url("../images/matrix-rain.gif") center/cover;
-  opacity:.3;pointer-events:none;
-}
-
-/* ─────────── CONTAINER KONTROLÜ ─────────── */
-/* 1) ÜST bölüm → .container orijinal Bootstrap genişliği (değiştirmiyoruz) */
-/* 2) ALT bölüm: .result-section genişleyecek                                   */
-body:has(.result-section) .result-section{
-  width:90vw;                       /* sonuç varsa mümkün olduğunca geniş */
-  margin-left:calc(-45vw + 50%);    /* ortalamak için */
-}
-body:not(:has(.result-section)) .container{
-  max-width:70vw;                   /* sonuç yokken üst taraf biraz genişlesin */
+.matrix-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: url("../images/matrix-rain.gif") center/cover;
+  opacity: .3;
+  pointer-events: none;
 }
 
-/* ─────────── FORM / KART ─────────── */
-.card,.card-body{background:var(--darker-bg);}
-.card{
-  border:1px solid var(--neon-green);
-  box-shadow:0 0 10px var(--neon-green);
-  border-radius:5px;
+/* ─────────── RESULT SECTION ─────────── */
+.result-section {
+  background: var(--terminal-bg);
+  border: 1px solid var(--neon-blue);
+  border-radius: 5px;
+  padding: 20px;
+  box-shadow: 0 0 15px rgba(0,255,255,.10);
+
+  /* adaptive width & centering */
+  width: auto;
+  max-width: 90vw;
+  margin: 20px auto;
+}
+.result-section .row > div {
+  flex: 0 0 100%;
+  max-width: 100%;
+}
+@media (min-width: 992px) {
+  .result-section .row > div {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+}
+@media (min-width: 1400px) {
+  .result-section .row > div {
+    flex: 0 0 33.333%;
+    max-width: 33.333%;
+  }
+}
+.result-section .accordion-body {
+  padding-inline: 1.25rem;
 }
 
-/* input, label, checkbox, button  (renk ayarları) */
-.form-control{
-  background:var(--terminal-bg);
-  border:1px solid var(--neon-blue);
-  color:var(--neon-green);
+/* ─────────── FORM / CARD ─────────── */
+.card,
+.card-body {
+  background: var(--darker-bg);
 }
-.form-control:focus{
-  background:var(--terminal-bg);
-  border-color:var(--neon-green);
-  box-shadow:0 0 10px var(--neon-green);
+.card {
+  border: 1px solid var(--neon-green);
+  box-shadow: 0 0 10px var(--neon-green);
+  border-radius: 5px;
 }
+
+/* ─────────── FORM CONTROLS ─────────── */
+.form-control {
+  background: var(--terminal-bg);
+  border: 1px solid var(--neon-blue);
+  color: var(--neon-green);
+  caret-color: var(--neon-green);
+}
+
+/* focus’ta sadece border/box-shadow değişsin, placeholder’a dokunma */
+.form-control:focus {
+  border-color: var(--neon-green);
+  box-shadow: 0 0 10px var(--neon-green);
+}
+
+/* placeholder hem normal hem focus’ta hep aynı yumuşak ton */
+.form-control::placeholder {
+  color: var(--matrix-green-checkbox);
+  opacity: 1;
+}
+
+.form-control:focus {
+  outline: none;                         /* beyaz varsayılan çerçeveyi kaldır */
+  background-color: var(--terminal-bg);  /* tıklayınca beyaz olmaz, arka plan sabit */
+  border-color: var(--neon-green);       /* neon vurgusu */
+  box-shadow: 0 0 10px var(--neon-green);
+}
+
+/* seçim (selection) ve caret rengi */
+.form-control::selection,
+.form-control::-moz-selection {
+  background-color: var(--neon-green);
+  color: var(--dark-bg);
+}
+
+/* input labels */
 .form-label,
-fieldset legend{
-  color:var(--neon-blue);
-  font-weight:bold;
-  text-transform:uppercase;
-  letter-spacing:1px;
-}
-.form-check-input{
-  width:1.2em;height:1.2em;margin-top:.25rem;
-  background:transparent;border:2px solid var(--matrix-green);
-  transition:.2s;
-}
-.form-check-input:checked{
-  background:var(--matrix-green-checkbox);
-  border-color:var(--matrix-green);
-  box-shadow:0 0 8px var(--matrix-green-glow);
-}
-.form-check-label{color:var(--matrix-green);margin-left:.5rem;}
-.btn-primary{
-  background:transparent;border:2px solid var(--neon-green);
-  color:var(--neon-green);font-weight:bold;
-  text-transform:uppercase;letter-spacing:2px;
-  position:relative;overflow:hidden;transition:.3s;
-}
-.btn-primary:hover{background:var(--neon-green);color:var(--dark-bg);box-shadow:0 0 20px var(--neon-green);}
-.btn-primary::before{
-  content:"";position:absolute;inset:0;left:-100%;
-  background:linear-gradient(90deg,transparent,rgba(57,255,20,.2),transparent);
-  transition:.5s;
-}
-.btn-primary:hover::before{left:100%;}
-
-/* ─────────── RESULTS SECTION ─────────── */
-.result-section{
-  background:var(--terminal-bg);
-  border:1px solid var(--neon-blue);
-  border-radius:5px;padding:20px;margin-top:20px;
-  box-shadow:0 0 15px rgba(0,255,255,.10);
+fieldset legend {
+  color: var(--neon-blue);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-/*  Grid ayarı: 1 → 2 → 3 sütun */
-.result-section .row>div{flex:0 0 100%;max-width:100%;}
-@media(min-width:992px){     /* lg */
-  .result-section .row>div{flex:0 0 50%;max-width:50%;}
+/* checkboxes */
+.form-check-input {
+  width: 1.2em;
+  height: 1.2em;
+  margin-top: .25rem;
+  background: transparent;
+  border: 2px solid var(--matrix-green);
+  transition: .2s;
 }
-@media(min-width:1400px){    /* xxl */
-  .result-section .row>div{flex:0 0 33.333%;max-width:33.333%;}
+.form-check-input:checked {
+  background: var(--matrix-green-checkbox);
+  border-color: var(--matrix-green);
+  box-shadow: 0 0 8px var(--matrix-green-glow);
 }
-.result-section .accordion-body{padding-inline:1.25rem;}
+.form-check-label {
+  color: var(--matrix-green);
+  margin-left: .5rem;
+}
 
-/*  Accordion / Tables / Pre (renkleri sabit) */
-.accordion{
-  --bs-accordion-bg:var(--terminal-bg);
-  --bs-accordion-border-color:var(--neon-blue);
-  --bs-accordion-btn-color:var(--neon-green);
-  --bs-accordion-btn-bg:var(--darker-bg);
-  --bs-accordion-active-bg:var(--darker-bg);
-  --bs-accordion-active-color:var(--neon-green);
+/* ─────────── BUTTONS ─────────── */
+.btn-primary {
+  background: transparent;
+  border: 2px solid var(--neon-green);
+  color: var(--neon-green);
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  position: relative;
+  overflow: hidden;
+  transition: .3s;
 }
-.accordion-button:not(.collapsed){
-  color:var(--neon-green);box-shadow:0 0 10px var(--neon-green);
+.btn-primary:hover {
+  background: var(--neon-green);
+  color: var(--dark-bg);
+  box-shadow: 0 0 20px var(--neon-green);
 }
-.accordion-button::after{filter:invert(1);}
-.table{color:var(--neon-green);border-color:var(--neon-blue);}
-.table-striped>tbody>tr:nth-of-type(odd){background:rgba(0,255,255,.05);}
-pre{
-  background:var(--darker-bg);color:var(--neon-green);
-  border:1px solid var(--neon-blue);padding:15px;border-radius:5px;
-  white-space:pre-wrap;word-wrap:break-word;
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  left: -100%;
+  background: linear-gradient(90deg, transparent, rgba(57,255,20,.2), transparent);
+  transition: .5s;
+}
+.btn-primary:hover::before {
+  left: 100%;
+}
+
+/* ─────────── ACCORDION & TABLES ─────────── */
+.accordion {
+  --bs-accordion-bg: var(--terminal-bg);
+  --bs-accordion-border-color: var(--neon-blue);
+  --bs-accordion-btn-color: var(--neon-green);
+  --bs-accordion-btn-bg: var(--darker-bg);
+  --bs-accordion-active-bg: var(--darker-bg);
+  --bs-accordion-active-color: var(--neon-green);
+}
+.accordion-button:not(.collapsed) {
+  color: var(--neon-green);
+  box-shadow: 0 0 10px var(--neon-green);
+}
+.accordion-button::after {
+  filter: invert(1);
+}
+
+.table {
+  color: var(--neon-green);
+  border-color: var(--neon-blue);
+}
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background: rgba(0,255,255,.05);
+}
+pre {
+  background: var(--darker-bg);
+  color: var(--neon-green);
+  border: 1px solid var(--neon-blue);
+  padding: 15px;
+  border-radius: 5px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 /* ─────────── GLITCH HEADER / MISC ─────────── */
-.glitch{position:relative;color:var(--neon-green);text-shadow:0 0 10px var(--neon-green);}
+.glitch {
+  position: relative;
+  color: var(--neon-green);
+  text-shadow: 0 0 10px var(--neon-green);
+}
 .glitch::before,
-.glitch::after{
-  content:attr(data-text);
-  position:absolute;inset:0;
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
 }
-.glitch::before{left:2px;text-shadow:-2px 0 var(--neon-blue);animation:gl1 2s infinite alternate;}
-.glitch::after {left:-2px;text-shadow: 2px 0 var(--neon-green);animation:gl2 3s infinite alternate;}
-@keyframes gl1{0%{clip-path:inset(20% 0 30% 0);}50%{clip-path:inset(60% 0 10% 0);}100%{clip-path:inset(30% 0 20% 0);}}
-@keyframes gl2{0%{clip-path:inset(15% 0 35% 0);}50%{clip-path:inset(55% 0 15% 0);}100%{clip-path:inset(25% 0 25% 0);}}
-
-.display-4{
-  font-family:"Courier New",monospace;font-weight:bold;
-  text-transform:uppercase;letter-spacing:3px;
+.glitch::before {
+  left: 2px;
+  text-shadow: -2px 0 var(--neon-blue);
+  animation: gl1 2s infinite alternate;
 }
-.lead{color:var(--neon-blue);font-family:"Courier New",monospace;}
-.timestamp{color:var(--neon-blue);}
+.glitch::after {
+  left: -2px;
+  text-shadow: 2px 0 var(--neon-green);
+  animation: gl2 3s infinite alternate;
+}
+@keyframes gl1 {
+  0% { clip-path: inset(20% 0 30% 0); }
+  50% { clip-path: inset(60% 0 10% 0); }
+  100% { clip-path: inset(30% 0 20% 0); }
+}
+@keyframes gl2 {
+  0% { clip-path: inset(15% 0 35% 0); }
+  50% { clip-path: inset(55% 0 15% 0); }
+  100% { clip-path: inset(25% 0 25% 0); }
+}
 
-/* hide the loading overlay until showLoading() runs */
+/* ─────────── HEADINGS & TEXT ─────────── */
+.display-4 {
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+}
+.lead {
+  color: var(--neon-blue);
+  font-family: "Courier New", monospace;
+}
+.timestamp {
+  color: var(--neon-blue);
+}
+
+/* ─────────── LOADING OVERLAY ─────────── */
 #loading {
   display: none;
 }

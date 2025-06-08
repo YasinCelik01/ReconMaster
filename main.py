@@ -8,7 +8,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for
 from modules import (whois_fetcher, fetch_ip, subfinder, shosubgo,
-                     github_subdomains, wayback, smap, katana,
+                     github_subdomains, wayback, smap, katana_runner,
                      linkfinder_runner, nmap_scan, waf_scan,
                      wappalyzer_runner, google_dorks_scraper,
                      telegram_bot, url_endpoint_filter, log_helper,
@@ -19,8 +19,8 @@ logger = log_helper.setup_logger('main', 'modules/logs/main.log')
 
 app = Flask(__name__)
 # Bunları kaldır ilerde, şimdilik html anında yansısın diye koydum
-app.config["TEMPLATES_AUTO_RELOAD"] = True
-app.jinja_env.auto_reload = True
+# app.config["TEMPLATES_AUTO_RELOAD"] = True
+# app.jinja_env.auto_reload = True
 
 # Tüm modüller ve label’ları
 # Bu listeyi terminal modunda modül devre dışı bırakmak için kullanıyoruz
@@ -122,7 +122,7 @@ def active_recon(target: str, modules: list[str]):
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         futures = {}
         if 'katana' in modules:
-            futures['katana'] = executor.submit(katana.katana_scan, target)
+            futures['katana'] = executor.submit(katana_runner.katana_scan, target)
         if 'linkfinder' in modules:
             futures['linkfinder'] = executor.submit(linkfinder_runner.run_linkfinder, target)
         if 'nmap' in modules:
@@ -280,8 +280,8 @@ def main():
 
     # --- GUI Mode ---
     # debug ve use_reloader'ı ilerde kaldır
-    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=True)
-
+    # app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=True)
+    app.run(host='0.0.0.0', port=5000)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():

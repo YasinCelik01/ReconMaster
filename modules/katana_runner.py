@@ -12,16 +12,38 @@ except ModuleNotFoundError:
 
 
 
-def katana_scan(target: str, rate_limit: int = 10):
+def katana_scan(target: str, rate_limit: int = 10, crawl_duration = 300):
     start = time.time()
     logger.info(f"Starting Katana scan for {target}")
     try:
+
         KATANA_COMMAND = [
-            'katana', '-u', target,
-            '-headless', '-js-crawl',
-            '-rate-limit', str(rate_limit),
-            '-sc'
-        ]
+                'katana',
+                '-u', target,
+
+                # HEADLESS ve JS CRAWL zaten var
+                '-headless',
+                '-js-crawl',
+            
+
+                # Tarama derinliği
+                '-d', '3',
+
+                # Rate‐limit
+                '-rate-limit', str(rate_limit),
+
+                # Maksimum tarama süresi her bir hedef için
+                '-ct', str(crawl_duration),
+
+                # Bilinen dosyaları (sitemap, robots.txt) da ekle
+                '-kf', 'all',
+
+                # Sistem Chrome'unu kullan
+                '-system-chrome',
+
+                # Zaten docker'da güncel hali olması garanti
+                '-disable-update-check'
+            ]
 
         if geteuid() == 0:
             KATANA_COMMAND.append('-no-sandbox')

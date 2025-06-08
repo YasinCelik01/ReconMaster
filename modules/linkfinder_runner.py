@@ -72,5 +72,5 @@ def run_linkfinder(url):
  
 if __name__ == "__main__":
 	url = 'balpars.com'
-	result = linkfinder(url)
+	result = run_linkfinder(url)
 	logger.info(result)

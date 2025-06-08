@@ -1,0 +1,109 @@
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <div class="card">
+        <div class="card-body">
+          <form method="POST" action="/">
+            <!-- URL + geçmiş sonuç dropdown’u -->
+            <div class="mb-3">
+              <label for="url" class="form-label">Target URL or Domain</label>
+              <div class="input-group">
+                <input type="text" class="form-control" id="url" name="url"
+                       placeholder="example.com" required>
+                <button class="btn btn-outline-secondary dropdown-toggle"
+                        type="button" data-bs-toggle="dropdown"
+                        aria-expanded="false"></button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  {% for f in files %}
+                    <li>
+                      <a class="dropdown-item"
+                         href="{{ url_for('index', results_file=f.name) }}">
+                        {{ f.display }}
+                      </a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+
+            <!-- Module selection -->
+            <div class="row">
+              <!-- Passive -->
+              <div class="col-md-4">
+                <fieldset class="mb-3">
+                  <legend>Passive Modules</legend>
+                  {% set passive_mods = [
+                      ('whois','WHOIS'), ('dns','DNS'), ('subfinder','Subfinder'),
+                      ('shosubgo','ShosubGo'), ('github','GitHub Subdomains'),
+                      ('wayback','Wayback'), ('smap','Shodan Port Scan'),
+                      ('googledorks','Google Dorks')
+                  ] %}
+                  {% for val,label in passive_mods %}
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox"
+                             name="modules" value="{{ val }}" id="m_{{ val }}" checked>
+                      <label class="form-check-label" for="m_{{ val }}">{{ label }}</label>
+                    </div>
+                  {% endfor %}
+                </fieldset>
+              </div>
+
+              <!-- Active -->
+              <div class="col-md-4">
+                <fieldset class="mb-3">
+                  <legend>Active Modules</legend>
+                  {% set active_mods = [
+                      ('katana','Katana'), ('linkfinder','JS LinkFinder'),
+                      ('nmap','Nmap'), ('wappalyzer','Wappalyzer'), ('waf','WAFW00f')
+                  ] %}
+                  {% for val,label in active_mods %}
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox"
+                             name="modules" value="{{ val }}" id="m_{{ val }}" checked>
+                      <label class="form-check-label" for="m_{{ val }}">{{ label }}</label>
+                    </div>
+                  {% endfor %}
+                </fieldset>
+              </div>
+
+              <div class="col-md-4">
+                <fieldset class="mb-3">
+                  <legend>Post-Scan Modules</legend>
+                  <div class="form-check">
+                    <!-- HTTPX artık varsayılan olarak seçili -->
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="modules"
+                           value="httpx"
+                           id="m_httpx"
+                           checked>
+                    <label class="form-check-label"
+                           for="m_httpx">HTTPX Scan</label>
+                  </div>
+                  <div class="form-check mt-2">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           name="modules"
+                           value="telegram"
+                           id="m_tg">
+                    <label class="form-check-label"
+                           for="m_tg">Telegram Notify</label>
+                  </div>
+                </fieldset>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <button class="btn btn-primary" type="submit">
+                <i class="bi bi-search"></i> Start Reconnaissance
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+      {% include '_loading.html' %}
+    </div>
+  </div>
+</div>
