@@ -8,9 +8,7 @@
 
 | Komut                             | Açıklama                                                       |
 |-----------------------------------|----------------------------------------------------------------|
-| `docker-compose up`               | Çalıştırmak                                                    |
-| `docker-compose up --build`       | Build et ve çalıştır, script'teki değişiklik yansımadıysa      |
-| `docker-compose build`            | Normal build, çalıştırmadan                                    |
+| `docker-compose up --build`       | Build et ve çalıştır                                           |
 | `docker-compose build --no-cache` | Cache kullanmadan build, yeni program eklendiyse kullan        |
 | `docker-compose down`             | Tüm konteynırları durdur ve sil                                |
 

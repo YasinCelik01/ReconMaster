@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for
 from modules import (whois_fetcher, fetch_ip, subfinder, shosubgo,
                      github_subdomains, wayback, smap, katana,
-                     js_endpoints, nmap_scan, waf_scan,
+                     linkfinder_runner, nmap_scan, waf_scan,
                      wappalyzer_runner, google_dorks_scraper,
                      telegram_bot, url_endpoint_filter, log_helper,
                      httpx_runner)
@@ -124,7 +124,7 @@ def active_recon(target: str, modules: list[str]):
         if 'katana' in modules:
             futures['katana'] = executor.submit(katana.katana_scan, target)
         if 'linkfinder' in modules:
-            futures['linkfinder'] = executor.submit(js_endpoints.linkfinder, target)
+            futures['linkfinder'] = executor.submit(linkfinder_runner.run_linkfinder, target)
         if 'nmap' in modules:
             futures['nmap'] = executor.submit(nmap_scan.scan_with_nmap, target)
         if 'wappalyzer' in modules:

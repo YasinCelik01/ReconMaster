@@ -146,3 +146,8 @@ pre{
 }
 .lead{color:var(--neon-blue);font-family:"Courier New",monospace;}
 .timestamp{color:var(--neon-blue);}
+
+/* hide the loading overlay until showLoading() runs */
+#loading {
+  display: none;
+}
