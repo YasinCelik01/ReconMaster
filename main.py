@@ -11,12 +11,16 @@ from modules import (whois_fetcher, fetch_ip, subfinder, shosubgo,
                      github_subdomains, wayback, smap, katana,
                      js_endpoints, nmap_scan, waf_scan,
                      wappalyzer_runner, google_dorks_scraper,
-                     telegram_bot, url_endpoint_filter, log_helper)
+                     telegram_bot, url_endpoint_filter, log_helper,
+                     httpx_runner)
 
 
 logger = log_helper.setup_logger('main', 'modules/logs/main.log')
 
 app = Flask(__name__)
+# Bunları kaldır ilerde, şimdilik html anında yansısın diye koydum
+app.config["TEMPLATES_AUTO_RELOAD"] = True
+app.jinja_env.auto_reload = True
 
 # Tüm modüller ve label’ları
 # Bu listeyi terminal modunda modül devre dışı bırakmak için kullanıyoruz
@@ -201,13 +205,19 @@ def run_full_recon(target: str, modules: list[str]):
         passive_result = passive_future.result()
         active_result  = active_future.result()
 
-    # post-recon: HTTPX
-    if 'httpx' in modules and passive_result.get('subdomains'):
-        try:
-            from modules import httpx_runner
-            passive_result['httpx'] = httpx_runner.run_httpx(passive_result['subdomains'])
-        except Exception:
-            logger.exception("HTTPX scan failed")
+    # HTTPX taraması — yalnızca subdomain’leri kullan
+    if 'httpx' in modules:
+        all_subs = passive_result.get('subdomains', []) + active_result.get('subdomains', [])
+        all_subs = list(set(all_subs))
+        if all_subs:
+            try:
+                logger.info(f"Running HTTPX on {len(all_subs)} subdomains…")
+                passive_result['httpx'] = httpx_runner.run_httpx(all_subs)
+            except Exception:
+                logger.exception("HTTPX scan on subdomains failed")
+    else:
+        # httpx seçilmediyse boş liste verelim ki template hata fırlatmasın
+        passive_result['httpx'] = []
 
     # sonuçları kaydet
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -224,7 +234,7 @@ def run_full_recon(target: str, modules: list[str]):
     os.chmod(path, 0o666)
     logger.info(f"Results saved to {path}")
 
-    # Telegram
+    # Telegram bildirimi
     if 'telegram' in modules:
         try:
             telegram_bot.run_telegram_bot(path)
@@ -232,6 +242,8 @@ def run_full_recon(target: str, modules: list[str]):
             logger.exception("Telegram notification failed")
 
     return passive_result, active_result, path
+
+
 
 
 
@@ -267,20 +279,19 @@ def main():
         return
 
     # --- GUI Mode ---
-    app.run(host='0.0.0.0', port=5000)
+    # debug ve use_reloader'ı ilerde kaldır
+    app.run(host='0.0.0.0', port=5000, debug=True, use_reloader=True)
 
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    # --- Dosya listesi için header_timestamp'i önce boş atıyoruz ---
     header_timestamp = ''
 
-    # 1) results klasöründeki JSON dosyalarını oku ve display metni hazırla
+    # 1) results klasöründeki JSON dosyalarını oku
     files = []
     for fname in os.listdir(RESULTS_DIR):
         if not fname.endswith('.json'):
             continue
-
         parts = fname.rsplit('_', 2)
         if len(parts) == 3:
             base, date_str, time_str = parts
@@ -294,42 +305,39 @@ def index():
         else:
             dt = None
             display = fname
+        files.append({'name': fname, 'display': display, 'dt': dt or datetime.min})
 
-        files.append({
-            'name':    fname,
-            'display': display,
-            'dt':       dt or datetime.min
-        })
-
-    # 2) Tarih/saat bilgisini de dikkate alarak en yeni en önde sıralama
+    # 2) Tarihe göre sırala
     files.sort(key=lambda x: x['dt'], reverse=True)
 
-    # 3) POST: yeni scan tetikleme
+    # 3) Yeni scan tetikleme
     if request.method == 'POST':
         target  = request.form['url']
         modules = request.form.getlist('modules')
         passive, active, results_file = run_full_recon(target, modules)
         return redirect(url_for('index', results_file=os.path.basename(results_file)))
 
-    # 4) GET: ?results_file parametresi varsa JSON'u oku ve header_timestamp ayarla
+    # 4) Var olan sonuç dosyasını yükleme
     sel = request.args.get('results_file')
     results = None
     if sel:
-        # Dropdown'dan seçilen dosyanın display metnini bul
         for f in files:
             if f['name'] == sel:
                 header_timestamp = f['display']
                 break
-
-        # JSON'u yükle
         with open(os.path.join(RESULTS_DIR, sel), 'r') as jf:
             data = json.load(jf)
+
+        # HTTPX key'inin mutlaka olsun
+        passive = data.get('passive_recon') or data.get('passive')
+        passive.setdefault('httpx', [])
+
         results = {
-            'passive': data.get('passive_recon') or data.get('passive'),
-            'active':  data.get('active_recon')  or data.get('active')
+            'passive': passive,
+            'active':  data.get('active_recon') or data.get('active')
         }
 
-    # 5) Şablonu render et
+    # 5) Template'i render et
     return render_template(
         'index.html',
         files=files,
