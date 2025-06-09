@@ -42,7 +42,11 @@ def katana_scan(target: str, rate_limit: int = 10, crawl_duration = 300):
                 '-system-chrome',
 
                 # Zaten docker'da güncel hali olması garanti
-                '-disable-update-check'
+                '-disable-update-check',
+                
+                # Prox'yimize kızmasın
+                '-headless-options',
+                '--proxy-server=http://127.0.0.1:3128,--ignore-certificate-errors,--allow-insecure-localhost,--no-sandbox,--disable-gpu'
             ]
 
         if geteuid() == 0:

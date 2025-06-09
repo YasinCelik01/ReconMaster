@@ -64,8 +64,19 @@ async def main():
     for attempt in range(max_retries):
         try:
             logger.debug(f"Browser launch attempt {attempt + 1}/{max_retries}")
-            driver = await uc.start(headless=False)  # Changed to False since we're using virtual display
 
+            driver = await uc.start(headless=False,
+                browser_args=[
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-gpu',
+                '--disable-dev-shm-usage',
+                '--proxy-server=http://127.0.0.1:3128',
+                '--ignore-certificate-errors',
+                '--allow-insecure-localhost',
+                '--disable-blink-features=AutomationControlled'
+                ])
+            
             await driver.wait(3)
             logger.debug("Navigating to search page")
             tab = await driver.get("Chrome://new-tab-page")

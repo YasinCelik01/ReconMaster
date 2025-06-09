@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     xvfb \
     x11vnc \
     xauth \
+    squid-openssl \
     && wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
     && apt install -y ./google-chrome-stable_current_amd64.deb \
     && rm google-chrome-stable_current_amd64.deb \
@@ -53,16 +54,50 @@ ENV DISPLAY=:99
 
 COPY . .
 
-# 8) Tek satır ENTRYPOINT ile:
+# --------------------Local-Proxy------------------------
+
+# Local Cache Proxy'imiz
+COPY squid.conf /etc/squid/squid.conf
+
+# HTTPS için SSL
+# --- CA key ve sertifikayı üret
+RUN mkdir -p /etc/squid/ssl_cert && \
+    cd /etc/squid/ssl_cert && \
+    openssl req -new -newkey rsa:2048 -days 365 -nodes -x509 \
+        -keyout squid.key -out squid.crt \
+        -subj "/C=TR/ST=Istanbul/L=Istanbul/O=ReconMaster/OU=Proxy/CN=SquidCA" && \
+    cat squid.crt squid.key > squid.pem && \
+    chmod 600 squid.pem && \
+    chown proxy:proxy squid.pem
+
+RUN /usr/lib/squid/security_file_certgen -c -s /var/lib/ssl_db -M 4MB
+
+# Sisteme ekle (Debian tabanlıysa)
+RUN cp /etc/squid/ssl_cert/squid.crt /usr/local/share/ca-certificates/squid.crt && \
+    update-ca-certificates
+
+# Python için (requests, httpx vs)
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+
+
+# ENTRYPOINT ile:
+#    - önce squid’i başlat, sonra proxy’yi ayarla
 #    - IP’den timezone al 5 saniyede alamazsa istanbul
 #    - /etc/localtime ve /etc/timezone güncelle
 #    - Uygulamayı çalıştır
 ENTRYPOINT ["sh","-c", "\
-   TZ=$(curl -sf --connect-timeout 3 -m 5 https://ipapi.co/timezone || echo 'Europe/Istanbul')  && \
-   ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
-   echo \"$TZ\" > /etc/timezone && \
-   dpkg-reconfigure -f noninteractive tzdata >/dev/null 2>&1 && \
-   exec python -u main.py \"$@\" \
+    mkdir -p /var/spool/squid && \
+    chown -R proxy:proxy /var/spool/squid && \
+    squid -Nz && \
+    squid -NYCd 1 & \
+    export HTTP_PROXY=http://127.0.0.1:3128 HTTPS_PROXY=http://127.0.0.1:3128 && \
+    TZ=$(curl -sf --connect-timeout 3 -m 5 https://ipapi.co/timezone || echo 'Europe/Istanbul') && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo \"$TZ\" > /etc/timezone && \
+    dpkg-reconfigure -f noninteractive tzdata >/dev/null 2>&1 && \
+    Xvfb :99 -screen 0 1920x1080x24 & \
+    exec python -u main.py \"$@\" \
 "]
+
 # Web arayüzü için port açıklığı
 EXPOSE 5000
