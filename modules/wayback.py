@@ -33,7 +33,7 @@ def fetch_wayback_200(target: str):
             str_list = list(filter(None, result_200))
             
             url_300 = f"https://web.archive.org/cdx/search/cdx?url=*.{target}%2F*&output=text&fl=original&collapse=urlkey&filter=statuscode%3A30*"
-            response = requests.get(url_200, timeout=240)
+            response = requests.get(url_300, timeout=240)
             response.raise_for_status()
             result_300 = response.content.decode('utf-8').split('\n')
             str_list.extend(list(filter(None, result_300)))
